@@ -1,15 +1,14 @@
 import express, { Application } from "express";
 import cors from "cors";
-import dotenv from "dotenv";
+import ProductRoutes from "./routes/ProductRoutes";
 
 const app: Application = express();
-const port = process.env.PORT || 8000;
+const port = 3000;
 
 app.use(cors());
+app.use(express.json());
 
-app.get("/", (req, res) => {
-  res.send("TS AND Typescript Server Working");
-});
+app.use("/api", ProductRoutes);
 
 app.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);
