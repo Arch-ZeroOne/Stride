@@ -33,16 +33,24 @@ function AppSidebar() {
             <ul className="menu menu-horizontal">
               {/* Navbar menu content here */}
               <li>
-                <a>Navbar Item 1</a>
+                <a>Products</a>
               </li>
               <li>
-                <a>Navbar Item 2</a>
+                <a>Expenses</a>
+              </li>
+              <li>
+                <a>Branches</a>
+              </li>
+              <li>
+                <a>Sellers</a>
+              </li>
+              <li>
+                <a>Account</a>
               </li>
             </ul>
           </div>
         </div>
         {/* Page content here */}
-        Content
       </div>
       <div className="drawer-side">
         <label
