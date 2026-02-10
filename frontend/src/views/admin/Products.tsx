@@ -29,7 +29,7 @@ interface IRow {
   accession_number: string;
   created_at: number;
   status_id: number;
-}
+} //tangina
 
 interface ActionCellProps extends ICellRendererParams<IRow> {
   onEdit: (row: IRow, actions: string) => void;
