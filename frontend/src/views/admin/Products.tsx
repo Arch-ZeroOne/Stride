@@ -9,9 +9,8 @@ import { AllCommunityModule, ModuleRegistry } from "ag-grid-community";
 // Core CSS
 import { AgGridReact } from "ag-grid-react";
 import { useState } from "react";
-
-import { ActivateIcon, DeactivateIcon, EditIcon } from "../../components/icons";
-
+import { EyeIcon, EditIcon, BarcodeIcon } from "../../components/icons";
+import { useModal, useProduct } from "../../context/ModalContext";
 import Swal from "sweetalert2";
 // Register all Community features
 ModuleRegistry.registerModules([AllCommunityModule]);
@@ -29,7 +28,13 @@ interface IRow {
   accession_number: string;
   created_at: number;
   status_id: number;
-} //tangina
+}
+
+const MODAL_ACTIONS = {
+  SETACTIVE: "Activate",
+  SETINACTIVE: "Deactivate",
+  SETOUTOFSTOCK: "Out of Stock",
+};
 
 interface ActionCellProps extends ICellRendererParams<IRow> {
   onEdit: (row: IRow, actions: string) => void;
@@ -37,7 +42,13 @@ interface ActionCellProps extends ICellRendererParams<IRow> {
   onDeactivate: (row: IRow) => void;
 }
 
+interface StatusChangeProps {
+  row: IRow;
+}
+
 function Products() {
+  const { productAction } = useModal();
+  const { productId } = useProduct();
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -53,9 +64,43 @@ function Products() {
   }, []);
   const onEdit = (row: IRow, action: string) => {};
 
+  useEffect(() => {
+    try {
+      if (typeof productAction === "string") {
+        switch (productAction) {
+          case MODAL_ACTIONS.SETACTIVE:
+            const setProductActive = async () => {
+              if (productId == null) return;
+
+              const response = await client.patch(
+                `/products/activate/${productId}`,
+              );
+
+              console.log(response);
+            };
+            setProductActive();
+            break;
+          case MODAL_ACTIONS.SETINACTIVE:
+            const setProductInactive = async () => {
+              if (productId == null) return;
+
+              const response = await client.patch(
+                `/products/deactivate/${productId}`,
+              );
+            };
+            setProductInactive();
+            break;
+            break;
+        }
+      }
+    } catch (error) {
+      console.error("Error Updating Status:", error);
+    }
+  }, [productAction]);
+
   const onActivate = (row: IRow) => {
     Swal.fire({
-      title: "Activate Product?",
+      title: "Activate Pr`oduct?",
       text: "You won't be able to revert this!",
       icon: "warning",
       showCancelButton: true,
@@ -93,16 +138,6 @@ function Products() {
       width: 130,
       headerName: "Product Name",
     },
-    {
-      field: "image",
-      width: 225,
-      headerName: "Image",
-      cellRenderer: ImageRenderer,
-    },
-    {
-      field: "barcode",
-      headerName: "Barcode",
-    },
 
     {
       field: "price",
@@ -114,13 +149,18 @@ function Products() {
     },
     {
       headerName: "Status",
-      cellRenderer: StatusCellRenderer,
+      cellRenderer: (params: ICellRendererParams<IRow>) => (
+        <StatusCellRenderer row={params.data} />
+      ),
+      flex: 1,
+      editable: false,
     },
     {
       field: "status_id",
       headerName: "Actions",
       cellRendererParams: { onEdit, onActivate, onDeactivate },
       cellRenderer: ActionCell,
+      flex: 1,
     },
   ]);
   const [rowData, setRowData] = useState<IRow[] | null>(null);
@@ -130,7 +170,7 @@ function Products() {
     return {
       flex: 2,
       filter: true,
-      editable: true,
+      editable: false,
     };
   }, []);
 
@@ -145,15 +185,19 @@ function Products() {
         columnDefs={colDefs}
         defaultColDef={defaultColDef}
         pagination={true}
+        suppressCellFocus={true}
       />
     </div>
   );
 }
-const StatusCellRenderer = (params: ValueFormatterParams) => {
-  const value = params.data.id;
-  const [status, setStatus] = useState<Status>(value);
-  const [action, setAction] = useState<Actions>("Activate");
-  console.log(status);
+
+//* Have to manually pass the onStatusChange funtion for updating status
+const StatusCellRenderer: React.FC<StatusChangeProps> = ({ row }) => {
+  //Used as to tell typescript this is a status type
+  const status_id = row.status_id as Status;
+  const [status, setStatus] = useState<Status>(status_id);
+  const { setProductAction } = useModal();
+  const { setProductId } = useProduct();
 
   const statusStyles: Record<Status, string> = {
     1: "select-success bg-success text-white ",
@@ -162,9 +206,9 @@ const StatusCellRenderer = (params: ValueFormatterParams) => {
   };
 
   useEffect(() => {
-    if (value === 1) {
+    if (status_id === 1) {
       setStatus(1);
-    } else if (value === 2) {
+    } else if (status_id === 2) {
       setStatus(2);
     } else {
       setStatus(3);
@@ -181,39 +225,36 @@ const StatusCellRenderer = (params: ValueFormatterParams) => {
               ? "Unavailable"
               : "Out of Stock"
         }
-        className={`select select-bordered ${statusStyles[status]} font-[Poppins]`}
+        onChange={() => setProductId(row.product_id)}
+        className={`select select-bordered ${statusStyles[status]} font-[Poppins] outline-none `}
       >
-        <option disabled={true}>Set Product Status</option>
+        <option disabled={true} className=" text-black">
+          Set Product Status
+        </option>
         <option
           value="Available"
-          className="badge-soft badge-success"
-          onClick={() => setStatus(1)}
+          className="badge-soft badge-success "
+          onClick={() => {
+            setStatus(1);
+            console.log(MODAL_ACTIONS.SETACTIVE);
+            setProductAction(MODAL_ACTIONS.SETACTIVE);
+          }}
         >
           Available
         </option>
         <option
           value="Unavailable"
-          className="badge-soft badge-error"
-          onClick={() => setStatus(2)}
+          className="badge-soft badge-error mt-3"
+          onClick={() => {
+            setStatus(2);
+            setProductAction(MODAL_ACTIONS.SETINACTIVE);
+          }}
         >
           Unavailable
-        </option>
-        <option
-          value="Out of Stock"
-          className="badge-soft badge-warning"
-          onClick={() => setStatus(3)}
-        >
-          Out of Stock
         </option>
       </select>
     </div>
   );
-};
-
-const ImageRenderer = (params: ValueFormatterParams) => {
-  const value = params.value;
-
-  return <img src={value} alt="Product" style={{ width: "100px" }} />;
 };
 
 const ActionCell: React.FC<ActionCellProps> = ({
@@ -224,15 +265,26 @@ const ActionCell: React.FC<ActionCellProps> = ({
 }) => {
   if (!data) return null;
   return (
-    <div className="flex items-center gap-3 cursor-pointer">
-      <select defaultValue="BSIT" className="select w-full">
-        <option disabled={true}>Student Course</option>
-        <option value="BSIT">BSIT</option>
-        <option value="BSBA">BSBA</option>
-        <option value="BSA">BSA</option>
-        <option value="BTLED">BTLED</option>
-      </select>
-    </div>
+    <section className="flex items-center gap-3 justify-center ">
+      <button
+        className="p-0 m-0 flex items-center cursor-pointer"
+        title="Edit Product"
+      >
+        <EditIcon height={32} width={30} />
+      </button>
+      <button
+        className="p-0 m-0 flex items-center cursor-pointer"
+        title="View Product"
+      >
+        <EyeIcon height={30} width={30} />
+      </button>
+      <button
+        className="p-0 m-0 flex items-center cursor-pointer"
+        title="Show Barcode"
+      >
+        <BarcodeIcon height={30} width={30} />
+      </button>
+    </section>
   );
 };
 export default Products;

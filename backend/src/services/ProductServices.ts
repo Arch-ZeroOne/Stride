@@ -81,6 +81,5 @@ export const deactivateProduct = async (id: string) => {
     [id],
   );
 
-  console.log(rows);
   return rows;
 };
