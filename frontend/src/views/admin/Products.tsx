@@ -9,7 +9,11 @@ import { AllCommunityModule, ModuleRegistry } from "ag-grid-community";
 import { AgGridReact } from "ag-grid-react";
 import { useState } from "react";
 import { EyeIcon, EditIcon, BarcodeIcon } from "../../components/icons";
-import { useModal, useProduct } from "../../context/ModalContext";
+import {
+  ModalContextProvider,
+  useModal,
+  useProduct,
+} from "../../context/ModalContext";
 import Swal from "sweetalert2";
 
 // Register all Community features
@@ -18,6 +22,7 @@ ModuleRegistry.registerModules([AllCommunityModule]);
 import type { Status } from "../../types/status";
 import type { Actions } from "../../types/actions";
 import client from "../../axiosClient";
+import { useNavigate } from "react-router";
 
 // Row Data Interface
 interface IRow {
@@ -50,6 +55,7 @@ interface StatusChangeProps {
 function Products() {
   const { productAction } = useModal();
   const { productId } = useProduct();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -69,34 +75,26 @@ function Products() {
 
   useEffect(() => {
     try {
+      console.log(productAction);
       if (typeof productAction === "string") {
-        switch (productAction) {
-          case MODAL_ACTIONS.SETACTIVE:
-            const setProductActive = async () => {
+        const updateStatus = async () => {
+          switch (productAction) {
+            case MODAL_ACTIONS.SETACTIVE:
               if (productId == null) return;
-              const response = await client.patch(
-                `/products/activate/${productId}`,
-              );
-              console.log(response);
-            };
-            setProductActive();
-            break;
-          case MODAL_ACTIONS.SETINACTIVE:
-            const setProductInactive = async () => {
+              await client.patch(`/products/activate/${productId}`);
+              break;
+            case MODAL_ACTIONS.SETINACTIVE:
               if (productId == null) return;
-              const response = await client.patch(
-                `/products/deactivate/${productId}`,
-              );
-            };
-            setProductInactive();
-            break;
-            break;
-        }
+              await client.patch(`/products/deactivate/${productId}`);
+              break;
+          }
+        };
+        updateStatus();
       }
     } catch (error) {
       console.error("Error Updating Status:", error);
     }
-  }, [productAction]);
+  }, [productAction, productId]);
 
   const onActivate = (row: IRow) => {
     Swal.fire({
@@ -178,11 +176,6 @@ function Products() {
     };
   }, []);
 
-  const handleAddProduct = () => {
-    // Add your modal or navigation logic here
-    console.log("Add Product clicked");
-  };
-
   // Container: Defines the grid's theme & dimensions.
   return (
     <div className="w-full h-full bg-base-100 p-6">
@@ -194,7 +187,10 @@ function Products() {
             Manage your product inventory
           </p>
         </div>
-        <button onClick={handleAddProduct} className="btn btn-primary gap-2">
+        <button
+          onClick={() => navigate("/admin/addproduct")}
+          className="btn btn-primary gap-2"
+        >
           <svg
             xmlns="http://www.w3.org/2000/svg"
             className="h-5 w-5"
@@ -261,29 +257,21 @@ const StatusCellRenderer: React.FC<StatusChangeProps> = ({ row }) => {
     <div className="flex items-center h-full">
       <select
         value={status}
-        onChange={(e) => setProductId(row.product_id)}
+        onChange={(e) => {
+          const action = Number(e.target.value);
+          setStatus(action as Status);
+          if (action === 1) {
+            setProductAction(MODAL_ACTIONS.SETACTIVE);
+          } else {
+            setProductAction(MODAL_ACTIONS.SETINACTIVE);
+          }
+          setProductId(row.product_id);
+        }}
         className={`select select-sm select-bordered ${statusStyles[status]} font-[Poppins] outline-none `}
       >
         <option disabled>Set Product Status</option>
-        <option
-          value={1}
-          onClick={() => {
-            setStatus(1);
-            console.log(MODAL_ACTIONS.SETACTIVE);
-            setProductAction(MODAL_ACTIONS.SETACTIVE);
-          }}
-        >
-          Available
-        </option>
-        <option
-          value={2}
-          onClick={() => {
-            setStatus(2);
-            setProductAction(MODAL_ACTIONS.SETINACTIVE);
-          }}
-        >
-          Unavailable
-        </option>
+        <option value={1}>Available</option>
+        <option value={2}>Unavailable</option>
       </select>
     </div>
   );
