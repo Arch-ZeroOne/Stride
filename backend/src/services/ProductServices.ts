@@ -1,8 +1,8 @@
 import { query } from "../dbconfig";
 import { Product } from "../types/RequestPayload";
+import * as util from "../util/util";
 
 export const getAllProducts = async () => {
-  console.log("getAllProducts service called");
   const { rows } = await query("SELECT * FROM product");
   return rows;
 };
@@ -17,24 +17,19 @@ export const addProduct = async (product: Product) => {
   const verified_at = null;
   let created_at = new Date();
   let updated_at = null;
+  const barcode = await util.generateProductBarcode();
 
-  const {
-    product_name,
-    barcode,
-    image,
-    price,
-    accession_number,
-    product_category_id,
-  } = product;
+  console.log(product);
+
+  const { product_name, image, price, product_category_id } = product;
 
   const { rows } = await query(
-    "INSERT INTO product (product_name,barcode,image,price,accession_number,created_at,updated_at,product_category_id,status_id) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *",
+    "INSERT INTO product (product_name,barcode,image,price,created_at,updated_at,product_category_id,status_id) VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *",
     [
       product_name,
       barcode,
       image,
       price,
-      accession_number,
       created_at,
       updated_at,
       product_category_id,

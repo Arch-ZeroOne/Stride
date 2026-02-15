@@ -34,6 +34,7 @@ export const getProductById = async (
 
 export const addProduct = async (req: Request, res: Response) => {
   try {
+    console.log("Request Body:", req.body);
     const addedProduct = await productService.addProduct(req.body);
     //201 = status for product is created
     return res.status(201).json(addedProduct);

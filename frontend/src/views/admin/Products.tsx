@@ -1,5 +1,4 @@
-import React, { use, useEffect, useMemo } from "react";
-
+import React, { useEffect, useMemo } from "react";
 import type {
   ColDef,
   ICellRendererParams,
@@ -12,8 +11,10 @@ import { useState } from "react";
 import { EyeIcon, EditIcon, BarcodeIcon } from "../../components/icons";
 import { useModal, useProduct } from "../../context/ModalContext";
 import Swal from "sweetalert2";
+
 // Register all Community features
 ModuleRegistry.registerModules([AllCommunityModule]);
+
 import type { Status } from "../../types/status";
 import type { Actions } from "../../types/actions";
 import client from "../../axiosClient";
@@ -36,7 +37,7 @@ const MODAL_ACTIONS = {
   SETOUTOFSTOCK: "Out of Stock",
 };
 
-interface ActionCellProps extends ICellRendererParams<IRow> {
+interface ActionCellProps extends ICellRendererParams {
   onEdit: (row: IRow, actions: string) => void;
   onActivate: (row: IRow) => void;
   onDeactivate: (row: IRow) => void;
@@ -49,19 +50,21 @@ interface StatusChangeProps {
 function Products() {
   const { productAction } = useModal();
   const { productId } = useProduct();
+
   useEffect(() => {
     const fetchData = async () => {
       try {
         const response = await client.get("/products");
         const { data } = response;
-
         setRowData(data);
       } catch (error) {
         console.error("Error fetching products:", error);
       }
     };
+
     fetchData();
   }, []);
+
   const onEdit = (row: IRow, action: string) => {};
 
   useEffect(() => {
@@ -71,11 +74,9 @@ function Products() {
           case MODAL_ACTIONS.SETACTIVE:
             const setProductActive = async () => {
               if (productId == null) return;
-
               const response = await client.patch(
                 `/products/activate/${productId}`,
               );
-
               console.log(response);
             };
             setProductActive();
@@ -83,7 +84,6 @@ function Products() {
           case MODAL_ACTIONS.SETINACTIVE:
             const setProductInactive = async () => {
               if (productId == null) return;
-
               const response = await client.patch(
                 `/products/deactivate/${productId}`,
               );
@@ -100,7 +100,7 @@ function Products() {
 
   const onActivate = (row: IRow) => {
     Swal.fire({
-      title: "Activate Pr`oduct?",
+      title: "Activate Product?",
       text: "You won't be able to revert this!",
       icon: "warning",
       showCancelButton: true,
@@ -116,7 +116,6 @@ function Products() {
         } catch (error) {
           console.error("Error activating product:", error);
         }
-
         Swal.fire({
           title: "Product Activated!",
           text: "Product status set to available.",
@@ -125,9 +124,10 @@ function Products() {
       }
     });
   };
+
   const onDeactivate = (row: IRow) => {};
 
-  const [colDefs] = useState<ColDef[]>([
+  const [colDefs] = useState([
     {
       field: "product_id",
       width: 150,
@@ -138,7 +138,6 @@ function Products() {
       width: 130,
       headerName: "Product Name",
     },
-
     {
       field: "price",
       headerName: "Price",
@@ -149,7 +148,7 @@ function Products() {
     },
     {
       headerName: "Status",
-      cellRenderer: (params: ICellRendererParams<IRow>) => (
+      cellRenderer: (params: ICellRendererParams) => (
         <StatusCellRenderer row={params.data} />
       ),
       flex: 1,
@@ -158,15 +157,20 @@ function Products() {
     {
       field: "status_id",
       headerName: "Actions",
-      cellRendererParams: { onEdit, onActivate, onDeactivate },
+      cellRendererParams: {
+        onEdit,
+        onActivate,
+        onDeactivate,
+      },
       cellRenderer: ActionCell,
       flex: 1,
     },
   ]);
-  const [rowData, setRowData] = useState<IRow[] | null>(null);
+
+  const [rowData, setRowData] = useState(null);
 
   // Apply settings across all columns
-  const defaultColDef = useMemo<ColDef>(() => {
+  const defaultColDef = useMemo(() => {
     return {
       flex: 2,
       filter: true,
@@ -174,19 +178,57 @@ function Products() {
     };
   }, []);
 
+  const handleAddProduct = () => {
+    // Add your modal or navigation logic here
+    console.log("Add Product clicked");
+  };
+
   // Container: Defines the grid's theme & dimensions.
   return (
-    <div
-      style={{ width: "95%", height: "80vh", marginTop: "20px" }}
-      className="ag-theme-alpine"
-    >
-      <AgGridReact
-        rowData={rowData}
-        columnDefs={colDefs}
-        defaultColDef={defaultColDef}
-        pagination={true}
-        suppressCellFocus={true}
-      />
+    <div className="w-full h-full bg-base-100 p-6">
+      {/* Header Section */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-800">Products</h1>
+          <p className="text-sm text-gray-500 mt-1">
+            Manage your product inventory
+          </p>
+        </div>
+        <button onClick={handleAddProduct} className="btn btn-primary gap-2">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-5 w-5"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+          >
+            <path
+              fillRule="evenodd"
+              d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
+              clipRule="evenodd"
+            />
+          </svg>
+          Add Product
+        </button>
+      </div>
+
+      {/* Data Grid Card */}
+      <div className="card bg-white shadow-xl">
+        <div className="card-body p-0">
+          <div
+            className="ag-theme-quartz w-full h-[600px]"
+            style={{
+              width: "100%",
+              height: "600px",
+            }}
+          >
+            <AgGridReact
+              rowData={rowData}
+              columnDefs={colDefs}
+              defaultColDef={defaultColDef}
+            />
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -195,11 +237,11 @@ function Products() {
 const StatusCellRenderer: React.FC<StatusChangeProps> = ({ row }) => {
   //Used as to tell typescript this is a status type
   const status_id = row.status_id as Status;
-  const [status, setStatus] = useState<Status>(status_id);
+  const [status, setStatus] = useState(status_id);
   const { setProductAction } = useModal();
   const { setProductId } = useProduct();
 
-  const statusStyles: Record<Status, string> = {
+  const statusStyles: Record<number, string> = {
     1: "select-success bg-success text-white ",
     2: "select-error bg-error text-white",
     3: "select-warning bg-warning text-black",
@@ -216,24 +258,15 @@ const StatusCellRenderer: React.FC<StatusChangeProps> = ({ row }) => {
   }, []);
 
   return (
-    <div className="flex items-center gap-3 cursor-pointer">
+    <div className="flex items-center h-full">
       <select
-        defaultValue={
-          status === 1
-            ? "Available"
-            : status === 2
-              ? "Unavailable"
-              : "Out of Stock"
-        }
-        onChange={() => setProductId(row.product_id)}
-        className={`select select-bordered ${statusStyles[status]} font-[Poppins] outline-none `}
+        value={status}
+        onChange={(e) => setProductId(row.product_id)}
+        className={`select select-sm select-bordered ${statusStyles[status]} font-[Poppins] outline-none `}
       >
-        <option disabled={true} className=" text-black">
-          Set Product Status
-        </option>
+        <option disabled>Set Product Status</option>
         <option
-          value="Available"
-          className="badge-soft badge-success "
+          value={1}
           onClick={() => {
             setStatus(1);
             console.log(MODAL_ACTIONS.SETACTIVE);
@@ -243,8 +276,7 @@ const StatusCellRenderer: React.FC<StatusChangeProps> = ({ row }) => {
           Available
         </option>
         <option
-          value="Unavailable"
-          className="badge-soft badge-error mt-3"
+          value={2}
           onClick={() => {
             setStatus(2);
             setProductAction(MODAL_ACTIONS.SETINACTIVE);
@@ -264,27 +296,23 @@ const ActionCell: React.FC<ActionCellProps> = ({
   onDeactivate,
 }) => {
   if (!data) return null;
+
   return (
-    <section className="flex items-center gap-3 justify-center ">
-      <button
-        className="p-0 m-0 flex items-center cursor-pointer"
-        title="Edit Product"
-      >
-        <EditIcon height={32} width={30} />
+    <div className="flex items-center gap-2 h-full">
+      <button className="btn btn-sm btn-ghost btn-circle hover:bg-blue-50">
+        <EyeIcon className="w-4 h-4 text-blue-600" />
       </button>
       <button
-        className="p-0 m-0 flex items-center cursor-pointer"
-        title="View Product"
+        onClick={() => onEdit(data, "edit")}
+        className="btn btn-sm btn-ghost btn-circle hover:bg-yellow-50"
       >
-        <EyeIcon height={30} width={30} />
+        <EditIcon className="w-4 h-4 text-yellow-600" />
       </button>
-      <button
-        className="p-0 m-0 flex items-center cursor-pointer"
-        title="Show Barcode"
-      >
-        <BarcodeIcon height={30} width={30} />
+      <button className="btn btn-sm btn-ghost btn-circle hover:bg-purple-50">
+        <BarcodeIcon className="w-4 h-4 text-purple-600" />
       </button>
-    </section>
+    </div>
   );
 };
+
 export default Products;
