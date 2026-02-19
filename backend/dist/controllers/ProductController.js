@@ -38,7 +38,6 @@ const productService = __importStar(require("../services/ProductServices"));
 const getAllProducts = async (req, res) => {
     console.log("getAllProducts called");
     try {
-        ("Fetching products from service...");
         const products = await productService.getAllProducts();
         console.log("Products retrieved:", products);
         res.status(200).json(products);
@@ -49,6 +48,7 @@ const getAllProducts = async (req, res) => {
 };
 exports.getAllProducts = getAllProducts;
 const getProductById = async (req, res) => {
+    console.log("Route Hit");
     try {
         const id = parseInt(req.params.id);
         const product = await productService.getProductById(id);
@@ -64,6 +64,7 @@ const getProductById = async (req, res) => {
 exports.getProductById = getProductById;
 const addProduct = async (req, res) => {
     try {
+        console.log("Request Body:", req.body);
         const addedProduct = await productService.addProduct(req.body);
         //201 = status for product is created
         return res.status(201).json(addedProduct);
@@ -75,12 +76,15 @@ const addProduct = async (req, res) => {
 };
 exports.addProduct = addProduct;
 const updateProduct = async (req, res) => {
+    console.log(req.params.id);
+    console.log("Route Hit");
     try {
         const updatedProduct = await productService.updateProduct(req.params.id, req.body);
         console.log("updatedProduct:", updatedProduct);
         return res.status(200).json(updatedProduct);
     }
     catch (error) {
+        console.log("Error");
         return res.status(500).json({ message: "Internal Server Error" });
     }
 };

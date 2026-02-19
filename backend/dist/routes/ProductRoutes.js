@@ -36,6 +36,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const productController = __importStar(require("../controllers/ProductController"));
 const router = (0, express_1.Router)();
+console.log("📦 LOADED productRoutes.js");
 router.get("/products", productController.getAllProducts);
 router.get("/products/:id", productController.getProductById);
 router.post("/products", productController.addProduct);

@@ -53,7 +53,7 @@ interface StatusChangeProps {
 }
 
 function Products() {
-  const { productAction } = useModal();
+  const { productAction, setProductAction } = useModal();
   const { productId } = useProduct();
   const navigate = useNavigate();
 
@@ -75,7 +75,6 @@ function Products() {
 
   useEffect(() => {
     try {
-      console.log(productAction);
       if (typeof productAction === "string") {
         const updateStatus = async () => {
           switch (productAction) {
@@ -188,7 +187,10 @@ function Products() {
           </p>
         </div>
         <button
-          onClick={() => navigate("/admin/addproduct")}
+          onClick={() => {
+            navigate("/admin/manageproduct");
+            setProductAction("Add");
+          }}
           className="btn btn-primary gap-2"
         >
           <svg
@@ -285,16 +287,25 @@ const ActionCell: React.FC<ActionCellProps> = ({
 }) => {
   if (!data) return null;
 
+  const { setProductAction } = useModal();
+  const navigate = useNavigate();
+
   return (
     <div className="flex items-center gap-2 h-full">
       <button className="btn btn-sm btn-ghost btn-circle hover:bg-blue-50">
         <EyeIcon className="w-4 h-4 text-blue-600" />
       </button>
       <button
-        onClick={() => onEdit(data, "edit")}
+        onClick={() => onEdit(data.product_id, "edit")}
         className="btn btn-sm btn-ghost btn-circle hover:bg-yellow-50"
       >
-        <EditIcon className="w-4 h-4 text-yellow-600" />
+        <EditIcon
+          className="w-4 h-4 text-yellow-600"
+          onClick={() => {
+            setProductAction("Update");
+            navigate(`manageproduct/${data.product_id}`);
+          }}
+        />
       </button>
       <button className="btn btn-sm btn-ghost btn-circle hover:bg-purple-50">
         <BarcodeIcon className="w-4 h-4 text-purple-600" />

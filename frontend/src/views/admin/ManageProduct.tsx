@@ -1,7 +1,9 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import client from "../../axiosClient";
 import Swal from "sweetalert2";
 import * as util from "../../util/cloudinary";
+import { useModal } from "../../context/ModalContext";
+import { useParams } from "react-router";
 const CATEGORIES = [
   { id: 1, name: "Electronics" },
   { id: 2, name: "Clothing" },
@@ -20,16 +22,32 @@ const CATEGORIES = [
   { id: 15, name: "Baby Products" },
 ];
 
-function AddProduct() {
+function ManageProduct() {
   const [product_name, setProductName] = useState<string>();
   const [imageFile, setImage] = useState<File | null>(null);
   const [url, setUrl] = useState();
   const [price, setPrice] = useState<string>();
   const [product_category_id, setCategory] = useState<number>();
-
   const imageRef = useRef(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { productAction } = useModal();
+  const { id } = useParams();
+
+  useEffect(() => {
+    // Retrieves old dara
+    if (productAction === "Update") {
+      const retrieveOld = async () => {
+        const response = await client.get(`products/${id}`);
+        const { data } = response;
+        const { product_name, price, product_category_id } = data;
+        setProductName(product_name);
+        setPrice(price);
+        setCategory(product_category_id);
+      };
+      retrieveOld();
+    }
+  }, []);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -72,15 +90,37 @@ function AddProduct() {
         const image = await util.getUploadUrl(imageFile);
         const payload = { product_name, price, image, product_category_id };
 
-        const response = await client.post("/products", payload);
+        if (!productAction) return;
+        console.log(productAction);
+        switch (productAction) {
+          case "Add":
+            const response = await client.post("/products", payload);
+            Swal.fire({
+              title: "Success!",
+              text: "Product added successfully",
+              icon: "success",
+              timer: 2000,
+              showConfirmButton: false,
+            });
+            break;
+          case "Update":
+            const updateResponse = await client.patch(
+              `/products/${id}`,
+              payload,
+            );
 
-        Swal.fire({
-          title: "Success!",
-          text: "Product added successfully",
-          icon: "success",
-          timer: 2000,
-          showConfirmButton: false,
-        });
+            console.log(updateResponse);
+
+            Swal.fire({
+              title: "Success!",
+              text: "Product updated successfully",
+              icon: "success",
+              timer: 2000,
+              showConfirmButton: false,
+            });
+
+            break;
+        }
 
         setImagePreview("");
         setProductName("");
@@ -92,10 +132,10 @@ function AddProduct() {
       // Optionally redirect to products page
       // navigate('/products');
     } catch (error) {
-      console.error("Error adding product:", error);
+      console.error("Error managing product:", error);
       Swal.fire({
         title: "Error!",
-        text: "Failed to add product",
+        text: "Failed to manage product",
         icon: "error",
       });
     } finally {
@@ -111,7 +151,9 @@ function AddProduct() {
     <div className="w-full h-full bg-base-100 p-6">
       {/* Header Section */}
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-800">Add New Product</h1>
+        <h1 className="text-3xl font-bold text-gray-800">
+          {productAction === "Add" ? "Add Product" : "Update Product"}
+        </h1>
         <p className="text-sm text-gray-500 mt-1">
           Fill in the product details below
         </p>
@@ -296,7 +338,7 @@ function AddProduct() {
                         clipRule="evenodd"
                       />
                     </svg>
-                    Add Product
+                    {productAction === "Add" ? "Add Product" : "Update Product"}
                   </>
                 )}
               </button>
@@ -336,4 +378,4 @@ function AddProduct() {
   );
 }
 
-export default AddProduct;
+export default ManageProduct;

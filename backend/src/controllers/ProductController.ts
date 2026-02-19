@@ -6,7 +6,6 @@ import { ProductParams } from "../types/RequestParams";
 export const getAllProducts = async (req: Request, res: Response) => {
   console.log("getAllProducts called");
   try {
-    ("Fetching products from service...");
     const products = await productService.getAllProducts();
     console.log("Products retrieved:", products);
     res.status(200).json(products);
@@ -19,6 +18,7 @@ export const getProductById = async (
   req: Request<ProductParams>,
   res: Response,
 ) => {
+  console.log("Route Hit");
   try {
     const id = parseInt(req.params.id);
     const product = await productService.getProductById(id);
@@ -57,6 +57,7 @@ export const updateProduct = async (
     console.log("updatedProduct:", updatedProduct);
     return res.status(200).json(updatedProduct);
   } catch (error) {
+    console.log("Error Updating Product", error);
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };
@@ -84,6 +85,16 @@ export const deactivateProduct = async (
       req.params.id,
     );
     return res.status(200).json(deactivatedProduct);
+  } catch (error) {
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+export const getCategories = async (req: Request, res: Response) => {
+  try {
+    const categories = await productService.getCategories();
+    console.log(categories);
+    return res.status(200).json(categories);
   } catch (error) {
     return res.status(500).json({ message: "Internal Server Error" });
   }

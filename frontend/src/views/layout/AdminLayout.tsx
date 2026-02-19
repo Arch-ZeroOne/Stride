@@ -5,7 +5,6 @@ function AdminLayout() {
   return (
     <div className="flex flex-col items-center">
       <AppSidebar />
-      <Outlet />
     </div>
   );
 }
