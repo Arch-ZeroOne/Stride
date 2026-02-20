@@ -187,7 +187,7 @@ function SellerInterface() {
                   className="border border-gray-100 rounded-xl bg-white hover:shadow-md hover:border-green-300 cursor-pointer transition-all group relative overflow-hidden"
                 >
                   <div className="absolute top-2 right-2 z-10">
-                    <span className="bg-orange-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+                    <span className="bg-green-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
                       {product.quantity}
                     </span>
                   </div>
@@ -209,7 +209,7 @@ function SellerInterface() {
                     <div className="mt-1.5">
                       <span className="bg-green-100 text-green-700 text-[11px] font-bold px-2 py-0.5 rounded">
                         {product.price
-                          ? `${product.price.toLocaleString()},00}`
+                          ? `${product.price.toLocaleString()},00`
                           : ""}
                       </span>
                     </div>

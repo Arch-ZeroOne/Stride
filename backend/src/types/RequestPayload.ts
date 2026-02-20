@@ -14,7 +14,16 @@ export type Product = {
 
 export type Sales = {
   sale_id?: number;
+  selling_date: Date;
+  total: number;
+  branch_id: number;
+  seller_id: number;
+};
+
+export type SellingItem = {
+  item_id: number;
   product_id: number;
-  profit: number;
-  selling_date: number;
+  sale_id: number;
+  quantity: number;
+  unit_price: number;
 };

@@ -4,10 +4,9 @@ import { Product } from "../types/RequestPayload";
 import { ProductParams } from "../types/RequestParams";
 
 export const getAllProducts = async (req: Request, res: Response) => {
-  console.log("getAllProducts called");
   try {
     const products = await productService.getAllProducts();
-    console.log("Products retrieved:", products);
+
     res.status(200).json(products);
   } catch (error) {
     return res.status(500).json({ message: "Internal Server Error" });
@@ -18,7 +17,6 @@ export const getProductById = async (
   req: Request<ProductParams>,
   res: Response,
 ) => {
-  console.log("Route Hit");
   try {
     const id = parseInt(req.params.id);
     const product = await productService.getProductById(id);
@@ -34,7 +32,6 @@ export const getProductById = async (
 
 export const addProduct = async (req: Request, res: Response) => {
   try {
-    console.log("Request Body:", req.body);
     const addedProduct = await productService.addProduct(req.body);
     //201 = status for product is created
     return res.status(201).json(addedProduct);
