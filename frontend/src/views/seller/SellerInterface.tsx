@@ -18,36 +18,6 @@ type Categories = {
   category_name: string;
 };
 
-// const products: Product[] = [
-//   {
-//     id: 1,
-//     name: "Mamaearth Vitamin C",
-//     code: "BC00889",
-//     price: 15000,
-//     stock: 0,
-//     unit: "Piece",
-//     emoji: "🍋",
-//   },
-//   {
-//     id: 2,
-//     name: "Tasting The Past",
-//     code: "P7850",
-//     price: 800,
-//     stock: 0,
-//     unit: "Set",
-//     emoji: "📚",
-//   },
-//   {
-//     id: 3,
-//     name: "Effective Java Learn",
-//     code: "P96410",
-//     price: 600,
-//     stock: 0,
-//     unit: "Set",
-//     emoji: "📘",
-//   },
-// ];
-
 // Row Data Interface
 interface Product {
   product_id: number;
@@ -58,35 +28,19 @@ interface Product {
   accession_number: string;
   created_at: number;
   status_id: number;
+  quantity: number;
 }
 
 interface CartItem {
-  id: number;
-  name: string;
-  qty: number;
-  tax: string;
+  product_id: number;
+  product_name: string;
   price: number;
+  qty: number;
   taxRate: number;
+  total: number;
 }
 
-const initialCart: CartItem[] = [
-  {
-    id: 101,
-    name: "Mixer",
-    qty: 2,
-    tax: "SGST (5%)",
-    price: 400,
-    taxRate: 0.05,
-  },
-  {
-    id: 102,
-    name: "Shrugs",
-    qty: 1,
-    tax: "CGST (10%)",
-    price: 1500,
-    taxRate: 0.2,
-  },
-];
+const initialCart: CartItem[] = [];
 
 const taxColors: Record<string, string> = {
   "SGST (5%)": "bg-emerald-500",
@@ -94,11 +48,8 @@ const taxColors: Record<string, string> = {
   "CGST (20%)": "bg-rose-500",
 };
 
-function calcSubtotal(item) {
-  return item.price * item.qty * (1 + item.taxRate);
-}
-
 function SellerInterface() {
+  const [total, setTotal] = useState<number>();
   const [products, setProducts] = useState<Product[]>();
   const [categories, setCategories] = useState<Categories[]>();
   const [activeCategory, setActiveCategory] = useState("All Categories");
@@ -107,12 +58,16 @@ function SellerInterface() {
   const [discount, setDiscount] = useState("");
 
   useEffect(() => {
+    if (cart) {
+      const sumPrice = cart.reduce((acc, curr) => acc + curr.price, 0);
+      setTotal(sumPrice);
+    }
+  }, [cart]);
+
+  useEffect(() => {
     const getProducts = async () => {
       const allProducts = await client.get("/products");
       const allCategories = await client.get("/products/categories");
-
-      console.log(allProducts);
-      console.log(allCategories);
 
       setProducts(allProducts.data);
       setCategories(allCategories.data);
@@ -120,39 +75,50 @@ function SellerInterface() {
     getProducts();
   }, []);
 
-  const updateQty = (id, delta) => {
+  const updateQty = (id: number, delta: number) => {
     setCart((prev) =>
       prev.map((item) =>
-        item.id === id ? { ...item, qty: Math.max(1, item.qty + delta) } : item,
+        item.product_id === id
+          ? { ...item, qty: Math.max(1, item.qty + delta) }
+          : item,
       ),
     );
   };
 
-  const removeItem = (id) =>
-    setCart((prev) => prev.filter((item) => item.id !== id));
+  const removeItem = (id: number) =>
+    setCart((prev) => prev.filter((item) => item.product_id !== id));
 
-  const addToCart = (product: Product) => {
-    const exists = cart.find((c) => c.name === product.name);
+  const addToCart = (product: Product, productId: number) => {
+    const exists = cart.find((c) => c.product_name === product.product_name);
+    const productToAdd = products?.find(
+      (item) => item.product_id === productId,
+    );
+
     if (exists) {
-      updateQty(exists.id, 1);
+      updateQty(exists.product_id, 1);
+
+      const discountAmt = parseFloat(discount) || 0;
     } else {
-      //   setCart((prev) => [
-      //     ...prev,
-      //     {
-      //       id: Date.now(),
-      //       name: product.name,
-      //       qty: 1,
-      //       tax: "SGST (5%)",
-      //       price: product.price,
-      //       taxRate: 0.05,
-      //     },
-      //   ]);
+      setCart((prev: any) => [
+        ...prev,
+        {
+          product_id: productToAdd?.product_id,
+          product_name: productToAdd?.product_name,
+          price: Number(productToAdd?.price),
+          qty: 1,
+          total: Number(productToAdd?.price),
+        },
+      ]);
+    }
+    //
+  };
+
+  const handlePayment = async () => {
+    if (cart) {
+      const response = client.post("/products");
     }
   };
 
-  const subtotal = cart.reduce((sum, item) => sum + calcSubtotal(item), 0);
-  const discountAmt = parseFloat(discount) || 0;
-  const total = Math.max(0, subtotal - discountAmt);
   if (!products) return;
   const filteredProducts = products.filter((p) =>
     p.product_name.toLowerCase().includes(search.toLowerCase()),
@@ -217,13 +183,13 @@ function SellerInterface() {
               {filteredProducts.map((product) => (
                 <div
                   key={product.product_id}
-                  onClick={() => addToCart(product)}
+                  onClick={() => addToCart(product, product.product_id)}
                   className="border border-gray-100 rounded-xl bg-white hover:shadow-md hover:border-green-300 cursor-pointer transition-all group relative overflow-hidden"
                 >
                   <div className="absolute top-2 right-2 z-10">
-                    {/* <span className="bg-orange-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
-                      {} {product.unit}
-                    </span> */}
+                    <span className="bg-orange-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+                      {product.quantity}
+                    </span>
                   </div>
 
                   <div className="flex items-center justify-center h-28 bg-gray-50 text-5xl rounded-t-xl group-hover:bg-green-50 transition-colors">
@@ -242,7 +208,9 @@ function SellerInterface() {
                     </p>
                     <div className="mt-1.5">
                       <span className="bg-green-100 text-green-700 text-[11px] font-bold px-2 py-0.5 rounded">
-                        ₱ {product.price.toLocaleString()},00
+                        {product.price
+                          ? `${product.price.toLocaleString()},00}`
+                          : ""}
                       </span>
                     </div>
                   </div>
@@ -268,27 +236,26 @@ function SellerInterface() {
           <div className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr_auto] gap-2 px-4 py-2 bg-gray-50 border-b border-gray-100 text-[11px] font-bold text-gray-500 uppercase tracking-wide">
             <span>Name</span>
             <span className="text-center">Qty</span>
-            <span className="text-center">Tax</span>
+            {/* <span className="text-center">Tax</span> */}
             <span className="text-right">Price</span>
-            <span className="text-right">Sub Total</span>
+
             <span></span>
           </div>
 
           {/* Cart Items */}
           <div className="flex-1 overflow-y-auto divide-y divide-gray-50">
             {cart.map((item) => {
-              const sub = calcSubtotal(item);
               return (
                 <div
-                  key={item.id}
+                  key={item.product_id}
                   className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr_auto] gap-2 items-center px-4 py-2.5 hover:bg-gray-50 transition-colors"
                 >
                   <span className="text-sm font-medium text-gray-800 truncate">
-                    {item.name}
+                    {item.product_name}
                   </span>
                   <div className="flex items-center justify-center gap-1">
                     <button
-                      onClick={() => updateQty(item.id, -1)}
+                      onClick={() => updateQty(item.product_id, -1)}
                       className="w-5 h-5 flex items-center justify-center rounded text-gray-500 hover:bg-gray-200 text-sm font-bold transition-colors"
                     >
                       −
@@ -297,31 +264,26 @@ function SellerInterface() {
                       {item.qty}
                     </span>
                     <button
-                      onClick={() => updateQty(item.id, 1)}
+                      onClick={() => updateQty(item.product_id, 1)}
                       className="w-5 h-5 flex items-center justify-center rounded text-gray-500 hover:bg-gray-200 text-sm font-bold transition-colors"
                     >
                       +
                     </button>
                   </div>
-                  <div className="flex flex-col gap-0.5 items-center">
+                  {/* Tax implementation  */}
+                  {/* <div className="flex flex-col gap-0.5 items-center">
                     <span
-                      className={`text-white text-[9px] font-bold px-1.5 py-0.5 rounded ${taxColors[item.tax] || "bg-gray-400"}`}
+                      className={`text-white text-[9px] font-bold px-1.5 py-0.5 rounded ${taxColors[item.taxRate] || "bg-red-500 "}`}
                     >
-                      {item.tax}
+                      {item.taxRate ? item.taxRate : "0"}
                     </span>
-                  </div>
+                  </div> */}
                   <span className="text-sm text-right text-gray-700">
                     $ {item.price.toLocaleString()},00
                   </span>
-                  <span className="text-sm font-semibold text-right text-gray-800">
-                    $
-                    {sub.toLocaleString(undefined, {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}
-                  </span>
+
                   <button
-                    onClick={() => removeItem(item.id)}
+                    onClick={() => removeItem(item.product_id)}
                     className="w-7 h-7 flex items-center justify-center rounded-lg bg-rose-500 hover:bg-rose-600 text-white transition-colors ml-1"
                   >
                     <Trash2 size={12} />
@@ -346,19 +308,10 @@ function SellerInterface() {
               />
               <div className="text-right text-sm text-gray-600 ml-auto whitespace-nowrap">
                 <div>
-                  Sub Total:{" "}
-                  <span className="font-semibold text-gray-800">
-                    $
-                    {subtotal.toLocaleString(undefined, {
-                      minimumFractionDigits: 2,
-                    })}
-                  </span>
-                </div>
-                <div>
                   Total:{" "}
                   <span className="font-bold text-gray-900">
                     $
-                    {total.toLocaleString(undefined, {
+                    {total?.toLocaleString(undefined, {
                       minimumFractionDigits: 2,
                     })}
                   </span>
@@ -366,7 +319,10 @@ function SellerInterface() {
               </div>
             </div>
             <div className="flex gap-3">
-              <button className="flex-1 bg-green-500 hover:bg-green-600 text-white font-bold py-3 rounded-xl transition-colors text-sm tracking-wide shadow-sm">
+              <button
+                className="flex-1 bg-green-500 hover:bg-green-600 text-white font-bold py-3 rounded-xl transition-colors text-sm tracking-wide shadow-sm"
+                onClick={() => handlePayment()}
+              >
                 PAY
               </button>
               <button

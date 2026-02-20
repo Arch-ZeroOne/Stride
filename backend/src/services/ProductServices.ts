@@ -21,12 +21,10 @@ export const addProduct = async (product: Product) => {
   let updated_at = null;
   const barcode = await util.generateProductBarcode();
 
-  console.log(product);
-
-  const { product_name, image, price, product_category_id } = product;
+  const { product_name, image, price, product_category_id, quantity } = product;
 
   const { rows } = await query(
-    "INSERT INTO product (product_name,barcode,image,price,created_at,updated_at,product_category_id,status_id) VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *",
+    "INSERT INTO product (product_name,barcode,image,price,created_at,updated_at,product_category_id,status_id,quantity) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *",
     [
       product_name,
       barcode,
@@ -36,6 +34,7 @@ export const addProduct = async (product: Product) => {
       updated_at,
       product_category_id,
       1,
+      quantity,
     ],
   );
 
@@ -45,35 +44,34 @@ export const addProduct = async (product: Product) => {
 export const updateProduct = async (id: string, product: Product) => {
   let updated_at = new Date();
 
-  let { product_name, image, price, product_category_id, status_id } = product;
+  let { product_name, image, price, product_category_id, status_id, quantity } =
+    product;
   let params = [
     product_name,
     price,
     updated_at,
     product_category_id,
-    (status_id = 1),
+    status_id,
+    quantity,
   ];
-
+  console.log("Status ID:" + status_id);
   if (!status_id) {
     status_id = 1;
   }
 
   let queryString =
-    "UPDATE product SET product_name = $1, price = $2,updated_at = $3, product_category_id = $4 ,status_id = $5";
+    "UPDATE product SET product_name = $1, price = $2,updated_at = $3, product_category_id = $4 ,status_id = $5,quantity = $6";
 
   if (image) {
-    console.log("There is an image");
-    queryString += ",image = $6";
-    queryString += " WHERE product_id = $7";
+    queryString += ",image = $7";
+    queryString += " WHERE product_id = $8";
     params.push(image);
   } else {
-    queryString += " WHERE product_id = $6";
+    queryString += " WHERE product_id = $7";
   }
 
   params.push(id);
 
-  console.log(queryString);
-  console.log(params);
   const { rows } = await query(`${queryString} RETURNING *`, params);
 
   return rows;

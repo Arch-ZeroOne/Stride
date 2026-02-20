@@ -28,9 +28,12 @@ function ManageProduct() {
   const [url, setUrl] = useState();
   const [price, setPrice] = useState<string>();
   const [product_category_id, setCategory] = useState<number>();
+  const [quantity, setQuantity] = useState<number>();
+
   const imageRef = useRef(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [status, setStatus] = useState<number>();
   const { productAction } = useModal();
   const { id } = useParams();
 
@@ -40,10 +43,18 @@ function ManageProduct() {
       const retrieveOld = async () => {
         const response = await client.get(`products/${id}`);
         const { data } = response;
-        const { product_name, price, product_category_id } = data;
+        const {
+          product_name,
+          price,
+          quantity,
+          product_category_id,
+          status_id,
+        } = data;
         setProductName(product_name);
         setPrice(price);
         setCategory(product_category_id);
+        setStatus(status_id);
+        setQuantity(quantity);
       };
       retrieveOld();
     }
@@ -88,10 +99,17 @@ function ManageProduct() {
 
       if (imageRef.current) {
         const image = await util.getUploadUrl(imageFile);
-        const payload = { product_name, price, image, product_category_id };
+        const payload = {
+          product_name,
+          price,
+          image,
+          product_category_id,
+          quantity,
+          status_id: status,
+        };
 
         if (!productAction) return;
-        console.log(productAction);
+
         switch (productAction) {
           case "Add":
             const response = await client.post("/products", payload);
@@ -283,8 +301,32 @@ function ManageProduct() {
                   </label>
                 </div>
                 <div className="form-control w-full">
+                  <label className="label">
+                    <span className="label-text font-semibold">
+                      Quantity (Amount) <span className="text-error">*</span>
+                    </span>
+                  </label>
+                  <label className="input-group">
+                    <input
+                      type="number"
+                      name="price"
+                      value={quantity}
+                      onChange={(e) => setQuantity(Number(e.target.value))}
+                      placeholder="0"
+                      min="0"
+                      className="input input-bordered w-full"
+                      required
+                    />
+                  </label>
+                </div>
+                <div className="form-control w-full">
+                  <label className="label">
+                    <span className="label-text font-semibold">
+                      Product Category <span className="text-error">*</span>
+                    </span>
+                  </label>
                   <select
-                    className="select"
+                    className="select w-full"
                     value={product_category_id}
                     required
                   >

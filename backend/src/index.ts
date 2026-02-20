@@ -1,6 +1,7 @@
 import express, { Application } from "express";
 import cors from "cors";
 import productRoutes from "./routes/ProductRoutes";
+import saleRoutes from "./routes/SalesRoutes";
 import expressListEndpoints from "express-list-endpoints";
 
 const app: Application = express();
@@ -10,6 +11,7 @@ app.use(cors());
 app.use(express.json());
 
 app.use("/api", productRoutes);
+app.use("/api", saleRoutes);
 console.log(expressListEndpoints(app));
 
 app.listen(port, () => {
