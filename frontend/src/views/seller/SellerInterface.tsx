@@ -10,8 +10,10 @@ import {
   Scan,
 } from "lucide-react";
 
+import type { SaleData, ItemData } from "../../types/sale";
 import client from "../../axiosClient";
 import Default from "/default/defaultimage.png";
+import Swal from "sweetalert2";
 
 type Categories = {
   category_id: number;
@@ -54,8 +56,12 @@ function SellerInterface() {
   const [categories, setCategories] = useState<Categories[]>();
   const [activeCategory, setActiveCategory] = useState("All Categories");
   const [search, setSearch] = useState("");
-  const [cart, setCart] = useState<CartItem[]>(initialCart);
+  const [cart, setCart] = useState<CartItem[] | null | undefined>(initialCart);
   const [discount, setDiscount] = useState("");
+  const [loading, setLoading] = useState<boolean>(false);
+  const [barcodeValue, setBarcodeValue] = useState<string | null | undefined>(
+    "",
+  );
 
   useEffect(() => {
     if (cart) {
@@ -77,7 +83,7 @@ function SellerInterface() {
 
   const updateQty = (id: number, delta: number) => {
     setCart((prev) =>
-      prev.map((item) =>
+      prev?.map((item) =>
         item.product_id === id
           ? { ...item, qty: Math.max(1, item.qty + delta) }
           : item,
@@ -86,10 +92,39 @@ function SellerInterface() {
   };
 
   const removeItem = (id: number) =>
-    setCart((prev) => prev.filter((item) => item.product_id !== id));
+    setCart((prev) => {
+      if (!prev) return;
 
-  const addToCart = (product: Product, productId: number) => {
-    const exists = cart.find((c) => c.product_name === product.product_name);
+      return prev.filter((item) => item.product_id !== id);
+    });
+
+  const addToCart = (productToFind: Product, productId: number) => {
+    const exists = cart?.find(
+      (c) => c.product_name === productToFind.product_name,
+    );
+    if (exists) {
+      //Find the product first
+      const findItem = products?.find(
+        (item: Product) => item.product_id === exists.product_id,
+      );
+
+      //Total the available quantity
+
+      const available = findItem?.quantity;
+
+      //Check the cart
+
+      if (!available) return;
+
+      if (exists.qty + 1 > available) {
+        Swal.fire({
+          title: "No more stock",
+          text: "Stock is not available anymore",
+          icon: "error",
+        });
+        return;
+      }
+    }
     const productToAdd = products?.find(
       (item) => item.product_id === productId,
     );
@@ -115,7 +150,57 @@ function SellerInterface() {
 
   const handlePayment = async () => {
     if (cart) {
-      const response = client.post("/products");
+      if (cart.length === 0) {
+        Swal.fire({
+          title: "Cart Empty!!",
+          text: "You cannot check out when cart is empty",
+          icon: "error",
+        });
+        return;
+      }
+      const sales: SaleData = {
+        selling_date: new Date(),
+        total: total,
+        branch_id: 1,
+        seller_id: 1,
+      };
+
+      const items: ItemData[] = cart.map((item) => {
+        const newItem = {
+          product_id: item.product_id,
+          quantity: item.qty,
+          unit_price: item.price,
+        };
+
+        return newItem;
+      });
+
+      const payload = { sale_data: sales, items_data: items };
+      setLoading(true);
+      const response = await client.post("/sales", payload);
+      console.log(response);
+      if (response.data) {
+        Swal.fire({
+          title: "Successfully Checked Out",
+          text: "You can now receieve the payment",
+          icon: "success",
+        });
+        setLoading(false);
+        setCart([]);
+        return;
+      }
+
+      Swal.fire({
+        title: "Error",
+        text: "Error Occured",
+        icon: "error",
+      });
+    }
+  };
+
+  const handleBarcdodeScan = async (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      const find = client.get(`/products/${barcodeValue}`);
     }
   };
 
@@ -150,9 +235,11 @@ function SellerInterface() {
                 onChange={(e) => setSearch(e.target.value)}
               />
             </div>
+            {/* Barcode scanning function */}
             <div className="flex items-center gap-2 border border-gray-200 rounded-lg px-3 py-2 flex-1 bg-gray-50">
               <Scan size={15} className="text-gray-400" />
               <input
+                onKeyDown={() => handleBarcodeScan()}
                 type="text"
                 placeholder="Search by Barcode Scanner"
                 className="bg-transparent outline-none text-sm w-full text-gray-600"
@@ -244,7 +331,7 @@ function SellerInterface() {
 
           {/* Cart Items */}
           <div className="flex-1 overflow-y-auto divide-y divide-gray-50">
-            {cart.map((item) => {
+            {cart?.map((item) => {
               return (
                 <div
                   key={item.product_id}
@@ -323,7 +410,11 @@ function SellerInterface() {
                 className="flex-1 bg-green-500 hover:bg-green-600 text-white font-bold py-3 rounded-xl transition-colors text-sm tracking-wide shadow-sm"
                 onClick={() => handlePayment()}
               >
-                PAY
+                {loading ? (
+                  <span className="loading loading-spinner text-primary "></span>
+                ) : (
+                  "PAY"
+                )}
               </button>
               <button
                 onClick={() => setCart([])}

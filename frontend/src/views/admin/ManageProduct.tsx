@@ -25,7 +25,6 @@ const CATEGORIES = [
 function ManageProduct() {
   const [product_name, setProductName] = useState<string>();
   const [imageFile, setImage] = useState<File | null>(null);
-  const [url, setUrl] = useState();
   const [price, setPrice] = useState<string>();
   const [product_category_id, setCategory] = useState<number>();
   const [quantity, setQuantity] = useState<number>();
@@ -113,6 +112,7 @@ function ManageProduct() {
         switch (productAction) {
           case "Add":
             const response = await client.post("/products", payload);
+            console.log(response);
             Swal.fire({
               title: "Success!",
               text: "Product added successfully",

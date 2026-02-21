@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo } from "react";
 import type {
-  ColDef,
   ICellRendererParams,
   ValueFormatterParams,
 } from "ag-grid-community";
@@ -9,18 +8,13 @@ import { AllCommunityModule, ModuleRegistry } from "ag-grid-community";
 import { AgGridReact } from "ag-grid-react";
 import { useState } from "react";
 import { EyeIcon, EditIcon, BarcodeIcon } from "../../components/icons";
-import {
-  ModalContextProvider,
-  useModal,
-  useProduct,
-} from "../../context/ModalContext";
+import { useModal, useProduct } from "../../context/ModalContext";
 import Swal from "sweetalert2";
 
 // Register all Community features
 ModuleRegistry.registerModules([AllCommunityModule]);
 
 import type { Status } from "../../types/status";
-import type { Actions } from "../../types/actions";
 import client from "../../axiosClient";
 import { useNavigate } from "react-router";
 
@@ -71,7 +65,10 @@ function Products() {
     fetchData();
   }, []);
 
-  const onEdit = (row: IRow, action: string) => {};
+  const onEdit = (row: IRow, action: string) => {
+    console.log(row);
+    console.log(action);
+  };
 
   useEffect(() => {
     try {
@@ -110,6 +107,7 @@ function Products() {
           const response = await client.patch(
             `/products/activate/${row.product_id}`,
           );
+          console.log(response);
         } catch (error) {
           console.error("Error activating product:", error);
         }
@@ -122,7 +120,9 @@ function Products() {
     });
   };
 
-  const onDeactivate = (row: IRow) => {};
+  const onDeactivate = (row: IRow) => {
+    console.log(row);
+  };
 
   const [colDefs] = useState([
     {
@@ -289,6 +289,7 @@ const ActionCell: React.FC<ActionCellProps> = ({
 
   const { setProductAction } = useModal();
   const navigate = useNavigate();
+  console.log(onActivate, onDeactivate);
 
   return (
     <div className="flex items-center gap-2 h-full">

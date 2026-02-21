@@ -1,11 +1,15 @@
 import React, { useState, useContext } from "react";
 const ProductModalContext = React.createContext({
   productAction: null,
-  setProductAction: (props: any) => {},
+  setProductAction: (props: any) => {
+    console.log(props);
+  },
 });
 const ProductContext = React.createContext({
   productId: null,
-  setProductId: (props: any) => {},
+  setProductId: (props: any) => {
+    console.log(props);
+  },
 });
 export const useModal = () => {
   return useContext(ProductModalContext);

@@ -1,6 +1,5 @@
 import * as productService from "../services/ProductServices";
 import { Request, Response } from "express";
-import { Product } from "../types/RequestPayload";
 import { ProductParams } from "../types/RequestParams";
 
 export const getAllProducts = async (req: Request, res: Response) => {
@@ -90,6 +89,16 @@ export const deactivateProduct = async (
 export const getCategories = async (req: Request, res: Response) => {
   try {
     const categories = await productService.getCategories();
+    console.log(categories);
+    return res.status(200).json(categories);
+  } catch (error) {
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+export const getByQr = async (req: Request, res: Response) => {
+  try {
+    const categories = await productService.getByQr(req.body);
     console.log(categories);
     return res.status(200).json(categories);
   } catch (error) {

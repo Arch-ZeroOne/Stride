@@ -8,7 +8,7 @@ export const getAllProducts = async () => {
 };
 
 export const getProductById = async (id: number) => {
-  const { rows } = await query("SELECT * FROM product WHERE product_id = $1", [
+  const { rows } = await query("SELECT * FROM products WHERE product_id = $1", [
     id,
   ]);
 
@@ -24,7 +24,7 @@ export const addProduct = async (product: Product) => {
   const { product_name, image, price, product_category_id, quantity } = product;
 
   const { rows } = await query(
-    "INSERT INTO product (product_name,barcode,image,price,created_at,updated_at,product_category_id,status_id,quantity) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *",
+    "INSERT INTO products (product_name,barcode,image,price,created_at,updated_at,product_category_id,status_id,quantity) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *",
     [
       product_name,
       barcode,
@@ -60,7 +60,7 @@ export const updateProduct = async (id: string, product: Product) => {
   }
 
   let queryString =
-    "UPDATE product SET product_name = $1, price = $2,updated_at = $3, product_category_id = $4 ,status_id = $5,quantity = $6";
+    "UPDATE products SET product_name = $1, price = $2,updated_at = $3, product_category_id = $4 ,status_id = $5,quantity = $6";
 
   if (image) {
     queryString += ",image = $7";
@@ -78,7 +78,7 @@ export const updateProduct = async (id: string, product: Product) => {
 };
 export const activateProduct = async (id: string) => {
   const rows = await query(
-    "UPDATE product SET status_id = 1 WHERE product_id = $1 RETURNING *",
+    "UPDATE products SET status_id = 1 WHERE product_id = $1 RETURNING *",
     [id],
   );
 
@@ -89,7 +89,7 @@ export const activateProduct = async (id: string) => {
 export const deactivateProduct = async (id: string) => {
   console.log("deactivateProduct service called with id:", id);
   const rows = await query(
-    "UPDATE product SET status_id = 2 WHERE product_id = $1 RETURNING *",
+    "UPDATE products SET status_id = 2 WHERE product_id = $1 RETURNING *",
     [id],
   );
 
@@ -99,4 +99,11 @@ export const deactivateProduct = async (id: string) => {
 export const getCategories = async () => {
   const { rows } = await query("SELECT * FROM productcategories");
   return rows;
+};
+
+export const getByQr = async (barcode: string) => {
+  const { rows } = await query("SELECT * FROM products WHERE barcode = $1", [
+    barcode,
+  ]);
+  console.log(rows);
 };

@@ -10,7 +10,6 @@ import {
   Bell,
   Search,
   Settings,
-  LogOut,
 } from "lucide-react";
 
 // ─── Nav config ────────────────────────────────────────────────────────────────
@@ -45,8 +44,8 @@ function Breadcrumb() {
 
   return (
     <nav className="flex items-center gap-1.5 text-sm">
-      {segments.map((seg, i) => {
-        const meta = routeMeta[seg];
+      {segments.map((seg: any, i: any) => {
+        const meta: any = routeMeta[seg];
         const isLast = i === segments.length - 1;
         const Icon = meta?.icon;
 
