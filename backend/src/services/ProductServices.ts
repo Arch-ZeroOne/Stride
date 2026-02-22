@@ -101,7 +101,7 @@ export const getCategories = async () => {
   return rows;
 };
 
-export const getByQr = async (barcode: string) => {
+export const getByBarcode = async (barcode: string) => {
   const { rows } = await query("SELECT * FROM products WHERE barcode = $1", [
     barcode,
   ]);

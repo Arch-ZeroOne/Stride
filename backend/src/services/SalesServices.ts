@@ -80,3 +80,28 @@ export const addSale = async (sale: any) => {
 
   return true;
 };
+
+export const getSales = async () => {
+  const monthly = await query(
+    "SELECT TO_CHAR(selling_date,'Month') AS label,COUNT(*) AS sales,SUM(total) AS income FROM sales GROUP BY label ORDER BY label",
+  );
+  const weekly = await query(
+    "SELECT DATE_TRUNC('week',selling_date) AS weekly, TO_CHAR(selling_date,'Week') AS label, COUNT(*) AS total_sales, SUM(total) AS income FROM sales GROUP BY weekly,label,selling_date ORDER BY weekly, EXTRACT (DOW FROM selling_date)",
+  );
+
+  const daily = await query(
+    "SELECT DATE_TRUNC('day',selling_date) AS daily, TO_CHAR(selling_date,'Day') AS label, COUNT(*) AS sales, SUM(total) AS income FROM sales GROUP BY daily,daily,selling_date ORDER BY daily, EXTRACT (DOW FROM selling_date)",
+  );
+  const byProduct = await query(
+    "SELECT product_name as name ,COUNT(*) as unitsSold,SUM(unit_price) as income FROM selling_item JOIN product ON product.product_id = selling_item.product_id GROUP BY product_name",
+  );
+
+  const dashboardData = {
+    monthly: monthly.rows,
+    weekly: weekly.rows,
+    daily: daily.rows,
+    topProducts: byProduct.rows,
+  };
+
+  return dashboardData;
+};

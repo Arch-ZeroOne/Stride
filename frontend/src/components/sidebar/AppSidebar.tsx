@@ -11,21 +11,19 @@ import {
   Search,
   Settings,
 } from "lucide-react";
+import Dashboard from "../../views/admin/Dashboard";
 
 // ─── Nav config ────────────────────────────────────────────────────────────────
 const navItems = [
+  { label: "Dashboard", icon: ReceiptText, to: "/admin/dashboard" },
   { label: "Products", icon: Package, to: "/admin/productlist" },
-  { label: "Expenses", icon: ReceiptText, to: "/admin/expenses" },
-  { label: "Branches", icon: GitBranch, to: "/admin/branches" },
-  { label: "Sellers", icon: Users, to: "/admin/sellers" },
 ];
 
 // Maps any pathname segment → human label + icon for the topbar breadcrumb
 const routeMeta = {
+  dashboard: { label: "Dashboard", icon: ReceiptText },
   products: { label: "Products", icon: Package },
-  expenses: { label: "Expenses", icon: ReceiptText },
-  branches: { label: "Branches", icon: GitBranch },
-  sellers: { label: "Sellers", icon: Users },
+
   settings: { label: "Settings", icon: Settings },
 };
 
