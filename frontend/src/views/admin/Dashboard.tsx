@@ -264,6 +264,23 @@ const Dashboard: React.FC = () => {
 
   const currSales = useMemo(() => sumField(curr, "income"), [curr]);
   const prevSales = useMemo(() => sumField(prev, "income"), [prev]);
+  const totalQuantity = monthly.reduce(
+    (acc, curr) => Number(curr.sales) + acc,
+    0,
+  );
+
+  const previousQuantity = monthly.reduce((acc, curr) => {
+    const today = new Date();
+    const localDateString = today.toLocaleString("default", { month: "long" });
+    const split = localDateString.split(" ");
+    const month = split[0];
+
+    if (curr.label !== month) {
+      return Number(curr.sales) + acc;
+    }
+
+    return acc;
+  }, 0);
 
   const avgCurr = curr.length > 0 ? Math.round(currSales / curr.length) : 0;
   const avgPrev = prev.length > 0 ? Math.round(prevSales / prev.length) : 0;
@@ -478,8 +495,8 @@ const Dashboard: React.FC = () => {
         />
         <StatCard
           title="Total Orders"
-          current={curr.length}
-          previous={prev.length}
+          current={totalQuantity}
+          previous={previousQuantity}
           prefix=""
           glowClass="bg-amber-500/10"
           barClass="bg-amber-400"
