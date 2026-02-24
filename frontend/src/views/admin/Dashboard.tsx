@@ -130,7 +130,10 @@ function sharedOptions(yLabel = "Revenue"): ChartOptions<"line"> {
         borderWidth: 1,
         padding: 12,
         callbacks: {
-          label: (ctx) => ` ${ctx.dataset.label}: $${fmtFull(ctx.parsed.y)}`,
+          label: (ctx) => {
+            const y = ctx.parsed.y ?? 0; // fallback to 0 if null
+            return ` ${ctx.dataset.label}: $${fmtFull(y)}`;
+          },
         },
       },
     },

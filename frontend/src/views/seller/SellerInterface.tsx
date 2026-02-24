@@ -11,8 +11,6 @@ import {
   Tag,
   CreditCard,
   X,
-  ChevronDown,
-  Zap,
   BarChart2,
   User,
   Warehouse,
@@ -62,7 +60,6 @@ function SellerInterface() {
   const [activeCategory, setActiveCategory] = useState("All Categories");
   const [search, setSearch] = useState("");
   const [cart, setCart] = useState<CartItem[] | null | undefined>(initialCart);
-  const [discount, setDiscount] = useState("");
   const [loading, setLoading] = useState<boolean>(false);
   const [productsLoading, setProductsLoading] = useState<boolean>(true);
   const [barcodeValue, setBarcodeValue] = useState<string | null | undefined>(

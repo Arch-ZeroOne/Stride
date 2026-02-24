@@ -1,5 +1,3 @@
-import React from "react";
-import { Outlet } from "react-router";
 import AppSidebar from "../../components/sidebar/AppSidebar";
 function AdminLayout() {
   return (

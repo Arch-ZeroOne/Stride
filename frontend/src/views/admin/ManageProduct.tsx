@@ -7,7 +7,6 @@ import { useParams } from "react-router";
 import {
   Package,
   Tag,
-  DollarSign,
   Hash,
   ImagePlus,
   X,
