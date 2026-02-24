@@ -8,7 +8,7 @@
     "build": "tsc",
     "dev": "nodemon --watch src --exec ts-node src/index.ts",
     "start": "node dist/index.ts",
-    "deploy" "node dist/index.js"
+    "deploy": "node dist/index.js"
   },
   "keywords": [],
   "author": "",
