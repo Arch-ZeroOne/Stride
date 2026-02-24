@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getProductCount = void 0;
+exports.updateProductStock = exports.markOutOfStock = exports.checkProductQuantity = exports.getProductCount = void 0;
 exports.generateProductBarcode = generateProductBarcode;
 const dbconfig_1 = require("../dbconfig");
 async function generateProductBarcode() {
@@ -15,3 +15,9 @@ const getProductCount = async () => {
     return parseInt(rows[0].count);
 };
 exports.getProductCount = getProductCount;
+const checkProductQuantity = async () => { };
+exports.checkProductQuantity = checkProductQuantity;
+const markOutOfStock = async () => { };
+exports.markOutOfStock = markOutOfStock;
+const updateProductStock = async () => { };
+exports.updateProductStock = updateProductStock;

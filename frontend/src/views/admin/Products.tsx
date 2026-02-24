@@ -265,6 +265,7 @@ function Products() {
 const StatusCellRenderer: React.FC<StatusChangeProps> = ({ row }) => {
   const status_id = row.status_id as Status;
   const [status, setStatus] = useState(status_id);
+  const [isUpdating, setIsUpdating] = useState(false);
   const { setProductAction } = useModal();
   const { setProductId } = useProduct();
 
@@ -295,22 +296,37 @@ const StatusCellRenderer: React.FC<StatusChangeProps> = ({ row }) => {
 
   const s = statusStyles[status] ?? statusStyles[1];
 
+  const handleChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const action = Number(e.target.value);
+    const prev = status;
+    setStatus(action as Status);
+    setIsUpdating(true);
+    try {
+      if (action === 1) {
+        await client.patch(`/products/activate/${row.product_id}`);
+        setProductAction(MODAL_ACTIONS.SETACTIVE);
+      } else if (action === 2) {
+        await client.patch(`/products/deactivate/${row.product_id}`);
+        setProductAction(MODAL_ACTIONS.SETINACTIVE);
+      } else {
+        await client.patch(`/products/deactivate/${row.product_id}`);
+        setProductAction(MODAL_ACTIONS.SETOUTOFSTOCK);
+      }
+      setProductId(row.product_id);
+    } catch (error) {
+      setStatus(prev);
+      console.error("Failed to update status:", error);
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
   return (
-    <div className="flex items-center h-full">
+    <div className="flex items-center h-full gap-2">
       <select
         value={status}
-        onChange={(e) => {
-          const action = Number(e.target.value);
-          setStatus(action as Status);
-          if (action === 1) {
-            setProductAction(MODAL_ACTIONS.SETACTIVE);
-          } else if (action === 2) {
-            setProductAction(MODAL_ACTIONS.SETINACTIVE);
-          } else {
-            setProductAction(MODAL_ACTIONS.SETOUTOFSTOCK);
-          }
-          setProductId(row.product_id);
-        }}
+        onChange={handleChange}
+        disabled={isUpdating}
         style={{
           background: s.bg,
           color: s.color,
@@ -320,7 +336,8 @@ const StatusCellRenderer: React.FC<StatusChangeProps> = ({ row }) => {
           fontSize: "11px",
           fontWeight: "600",
           outline: "none",
-          cursor: "pointer",
+          cursor: isUpdating ? "not-allowed" : "pointer",
+          opacity: isUpdating ? 0.5 : 1,
         }}
       >
         <option value={1} style={{ background: "#1a2035", color: "#e2e8f0" }}>
@@ -333,6 +350,12 @@ const StatusCellRenderer: React.FC<StatusChangeProps> = ({ row }) => {
           Out of Stock
         </option>
       </select>
+      {isUpdating && (
+        <div
+          className="w-3.5 h-3.5 rounded-full border-2 animate-spin flex-shrink-0"
+          style={{ borderColor: `${s.color}33`, borderTopColor: s.color }}
+        />
+      )}
     </div>
   );
 };

@@ -33,13 +33,11 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deactivateProduct = exports.activateProduct = exports.updateProduct = exports.addProduct = exports.getProductById = exports.getAllProducts = void 0;
+exports.getByBarcode = exports.getCategories = exports.markOutOfStock = exports.deactivateProduct = exports.activateProduct = exports.updateProduct = exports.addProduct = exports.getProductById = exports.getAllProducts = void 0;
 const productService = __importStar(require("../services/ProductServices"));
 const getAllProducts = async (req, res) => {
-    console.log("getAllProducts called");
     try {
         const products = await productService.getAllProducts();
-        console.log("Products retrieved:", products);
         res.status(200).json(products);
     }
     catch (error) {
@@ -48,7 +46,6 @@ const getAllProducts = async (req, res) => {
 };
 exports.getAllProducts = getAllProducts;
 const getProductById = async (req, res) => {
-    console.log("Route Hit");
     try {
         const id = parseInt(req.params.id);
         const product = await productService.getProductById(id);
@@ -64,7 +61,6 @@ const getProductById = async (req, res) => {
 exports.getProductById = getProductById;
 const addProduct = async (req, res) => {
     try {
-        console.log("Request Body:", req.body);
         const addedProduct = await productService.addProduct(req.body);
         //201 = status for product is created
         return res.status(201).json(addedProduct);
@@ -76,15 +72,13 @@ const addProduct = async (req, res) => {
 };
 exports.addProduct = addProduct;
 const updateProduct = async (req, res) => {
-    console.log(req.params.id);
-    console.log("Route Hit");
     try {
         const updatedProduct = await productService.updateProduct(req.params.id, req.body);
         console.log("updatedProduct:", updatedProduct);
         return res.status(200).json(updatedProduct);
     }
     catch (error) {
-        console.log("Error");
+        console.log("Error Updating Product", error);
         return res.status(500).json({ message: "Internal Server Error" });
     }
 };
@@ -109,3 +103,40 @@ const deactivateProduct = async (req, res) => {
     }
 };
 exports.deactivateProduct = deactivateProduct;
+const markOutOfStock = async (req, res) => {
+    try {
+        const deactivatedProduct = await productService.markOutOfStock(req.params.id);
+        return res.status(200).json(deactivatedProduct);
+    }
+    catch (error) {
+        return res.status(500).json({ message: "Internal Server Error" });
+    }
+};
+exports.markOutOfStock = markOutOfStock;
+const getCategories = async (req, res) => {
+    try {
+        const categories = await productService.getCategories();
+        console.log(categories);
+        return res.status(200).json(categories);
+    }
+    catch (error) {
+        return res.status(500).json({ message: "Internal Server Error" });
+    }
+};
+exports.getCategories = getCategories;
+const getByBarcode = async (req, res) => {
+    let barcode;
+    try {
+        if (req.params.barcode) {
+            barcode = req.params.barcode;
+            const barcodeScanned = await productService.getByBarcode(barcode);
+            return res.status(200).json(barcodeScanned);
+        }
+        res.status(404).json({ message: "Product Not Found" });
+    }
+    catch (error) {
+        console.error(error);
+        return res.status(500).json({ message: "Internal Server Error" });
+    }
+};
+exports.getByBarcode = getByBarcode;

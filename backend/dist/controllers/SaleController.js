@@ -33,16 +33,31 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-const express_1 = require("express");
-const productController = __importStar(require("../controllers/ProductController"));
-const router = (0, express_1.Router)();
-router.get("/products", productController.getAllProducts);
-router.get("/products/categories", productController.getCategories);
-router.get("/products/:id", productController.getProductById);
-router.get("/products/get/:barcode", productController.getByBarcode);
-router.post("/products", productController.addProduct);
-router.patch("/products/:id", productController.updateProduct);
-router.patch("/products/activate/:id", productController.activateProduct);
-router.patch("/products/mark/:id", productController.markOutOfStock);
-router.patch("/products/deactivate/:id", productController.deactivateProduct);
-exports.default = router;
+exports.getSales = exports.addSale = void 0;
+const saleService = __importStar(require("../services/SalesServices"));
+const addSale = async (req, res) => {
+    try {
+        const addedSale = await saleService.addSale(req.body);
+        if (addedSale) {
+            return res.status(201).json({ isAdded: true });
+        }
+        //201 = status for product is created
+        return res.status(401).json({ isAdded: false });
+    }
+    catch (error) {
+        console.error("Error adding sale:", error);
+        return res.status(500).json({ message: "Internal Server Error" });
+    }
+};
+exports.addSale = addSale;
+const getSales = async (req, res) => {
+    try {
+        const sales = await saleService.getSales();
+        return res.status(200).json({ sales });
+    }
+    catch (error) {
+        console.error("Error getting total sales:", error);
+        return res.status(500).json({ mesage: "Internal Server Error" });
+    }
+};
+exports.getSales = getSales;
