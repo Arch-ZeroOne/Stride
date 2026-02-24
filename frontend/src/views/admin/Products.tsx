@@ -361,7 +361,7 @@ const StatusCellRenderer: React.FC<StatusChangeProps> = ({ row }) => {
 };
 
 // Eye icon removed — only Edit and Barcode actions remain
-const ActionCell: React.FC<ActionCellProps> = ({ data, onEdit }) => {
+const ActionCell: React.FC<ActionCellProps> = ({ data }) => {
   if (!data) return null;
 
   const { setProductAction } = useModal();
