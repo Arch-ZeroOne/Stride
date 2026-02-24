@@ -102,7 +102,9 @@ function SellerInterface() {
     const exists = cart?.find(
       (c) => c.product_name === productToFind.product_name,
     );
+
     if (exists) {
+      console.log("Item Existing");
       //Find the product first
       const findItem = products?.find(
         (item: Product) => item.product_id === exists.product_id,
@@ -125,9 +127,12 @@ function SellerInterface() {
         return;
       }
     }
+    console.log("Item added new");
     const productToAdd = products?.find(
       (item) => item.product_id === productId,
     );
+
+    console.log(productToAdd);
 
     if (exists) {
       updateQty(exists.product_id, 1);
@@ -198,9 +203,14 @@ function SellerInterface() {
     }
   };
 
-  const handleBarcdodeScan = async (e: React.KeyboardEvent) => {
+  const handleBarcodeScan = async (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
-      const find = client.get(`/products/${barcodeValue}`);
+      const find = await client.get(`/products/get/${barcodeValue}`);
+      const { data } = find;
+
+      if (data.length != 0) {
+        addToCart(data[0], data[0].product_id);
+      }
     }
   };
 
@@ -239,7 +249,8 @@ function SellerInterface() {
             <div className="flex items-center gap-2 border border-gray-200 rounded-lg px-3 py-2 flex-1 bg-gray-50">
               <Scan size={15} className="text-gray-400" />
               <input
-                onKeyDown={() => handleBarcodeScan()}
+                onChange={(e) => setBarcodeValue(e.target.value)}
+                onKeyDown={(e) => handleBarcodeScan(e)}
                 type="text"
                 placeholder="Search by Barcode Scanner"
                 className="bg-transparent outline-none text-sm w-full text-gray-600"

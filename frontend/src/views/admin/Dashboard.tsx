@@ -16,6 +16,13 @@ import {
 import { Bar, Line } from "react-chartjs-2";
 import client from "../../axiosClient";
 
+/*
+ ! Dashboard Issues
+ ! Weekly trend not formatted into actual week string format
+ ! Bar line in amount sold lighting up (maybe because of incorrect calculation)
+ 
+
+*/
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -53,18 +60,22 @@ export interface TopProduct {
   unitssold: string;
   revenue: string;
 }
-
+export interface totalQuantity {
+  count: number;
+}
 export interface DashboardData {
   monthly: MonthlySale[];
   weekly: WeeklySale[];
   daily: DailySale[];
   topProducts: TopProduct[];
+  totalQuantity?: totalQuantity[];
 }
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
 function sumField<T>(data: T[] | undefined, field: keyof T): number {
   if (!data || data.length === 0) return 0;
+  console.log(data);
   return data.reduce((acc, item) => acc + Number(item[field]), 0);
 }
 
@@ -245,12 +256,12 @@ const Dashboard: React.FC = () => {
   const [dashboardData, setDashboardData] = useState<DashboardData | undefined>(
     undefined,
   );
-  const [period, setPeriod] = useState("monthly");
 
   // ── Fetch ───────────────────────────────────────────────────────────────────
   useEffect(() => {
     const fetchData = async () => {
       const response = await client.get("/sales/total");
+
       setDashboardData(response.data.sales);
     };
     fetchData();
@@ -259,6 +270,7 @@ const Dashboard: React.FC = () => {
   // ── Stat card values ────────────────────────────────────────────────────────
   const monthly = dashboardData?.monthly ?? [];
   const half = Math.floor(monthly.length / 2);
+
   const curr = monthly.slice(half);
   const prev = monthly.slice(0, half);
 
@@ -291,7 +303,7 @@ const Dashboard: React.FC = () => {
       labels: (dashboardData?.monthly ?? []).map((d) => d.label),
       datasets: [
         {
-          label: "Sales",
+          label: "Quantity Sold",
           data: (dashboardData?.monthly ?? []).map((d) => Number(d.sales)),
           backgroundColor: `${P.cyan}44`,
           borderColor: P.cyan,
@@ -318,7 +330,7 @@ const Dashboard: React.FC = () => {
       labels: (dashboardData?.weekly ?? []).map((d) => d.label),
       datasets: [
         {
-          label: "Sales",
+          label: "Quantity Sold",
           data: (dashboardData?.weekly ?? []).map((d) => Number(d.total_sales)),
           borderColor: P.emerald,
           backgroundColor: `${P.emerald}22`,
@@ -460,18 +472,6 @@ const Dashboard: React.FC = () => {
         </div>
         <div className="relative">
           <label className="sr-only">View Period</label>
-          <select
-            value={period}
-            onChange={(e) => setPeriod(e.target.value)}
-            className="w-36 cursor-pointer appearance-none rounded-xl border border-white/[0.08] bg-gray-900 py-2 pl-3.5 pr-9 text-sm text-slate-200 shadow-sm transition-colors focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500/40"
-          >
-            <option value="daily">Daily</option>
-            <option value="weekly">Weekly</option>
-            <option value="monthly">Monthly</option>
-          </select>
-          <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">
-            ▾
-          </span>
         </div>
       </div>
 
@@ -494,7 +494,7 @@ const Dashboard: React.FC = () => {
           icon="🛒"
         />
         <StatCard
-          title="Total Orders"
+          title="Total Amount Sold"
           current={totalQuantity}
           previous={previousQuantity}
           prefix=""

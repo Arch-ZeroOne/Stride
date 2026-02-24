@@ -14,3 +14,9 @@ export const getProductCount = async () => {
 
   return parseInt(rows[0].count);
 };
+
+export const checkProductQuantity = async () => {};
+
+export const markOutOfStock = async () => {};
+
+export const updateProductStock = async () => {};

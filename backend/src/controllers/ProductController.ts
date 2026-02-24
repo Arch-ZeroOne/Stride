@@ -96,11 +96,20 @@ export const getCategories = async (req: Request, res: Response) => {
   }
 };
 
-export const getByBarcode = async (req: Request, res: Response) => {
+export const getByBarcode = async (
+  req: Request<ProductParams>,
+  res: Response,
+) => {
+  let barcode;
   try {
-    const barcodeScanned = await productService.getByBarcode(req.body);
-    return res.status(200).json(barcodeScanned);
+    if (req.params.barcode) {
+      barcode = req.params.barcode;
+      const barcodeScanned = await productService.getByBarcode(barcode);
+      return res.status(200).json(barcodeScanned);
+    }
+    res.status(404).json({ message: "Product Not Found" });
   } catch (error) {
+    console.error(error);
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };
