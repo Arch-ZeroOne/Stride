@@ -1,0 +1,6 @@
+PG_USER ="stride_db_7kre_user"
+PG_HOST = "dpg-d6evaos50q8c73afjb3g-a.oregon-postgres.render.com"
+PG_DATABASE = "stride_db_7kre"
+PG_PASSWORD = "aTzPvRojl49sBNAa7euZAB2roiy3v1KO"
+PG_PORT = 5432
+DATABASE_URL="postgresql://stride_db_7kre_user:aTzPvRojl49sBNAa7euZAB2roiy3v1KO@dpg-d6evaos50q8c73afjb3g-a.oregon-postgres.render.com/stride_db_7kre"
