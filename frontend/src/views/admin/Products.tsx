@@ -4,21 +4,18 @@ import type {
   ValueFormatterParams,
 } from "ag-grid-community";
 import { AllCommunityModule, ModuleRegistry } from "ag-grid-community";
-// Core CSS
 import { AgGridReact } from "ag-grid-react";
 import { useState } from "react";
-import { EyeIcon, EditIcon, BarcodeIcon } from "../../components/icons";
+import { EditIcon } from "../../components/icons";
 import { useModal, useProduct } from "../../context/ModalContext";
 import Swal from "sweetalert2";
-
-// Register all Community features
-ModuleRegistry.registerModules([AllCommunityModule]);
-
 import type { Status } from "../../types/status";
 import client from "../../axiosClient";
 import { useNavigate } from "react-router";
+import { Plus, Package } from "lucide-react";
 
-// Row Data Interface
+ModuleRegistry.registerModules([AllCommunityModule]);
+
 interface IRow {
   product_id: number;
   product_name: string;
@@ -55,32 +52,31 @@ function Products() {
     const fetchData = async () => {
       try {
         const response = await client.get("/products");
-        const { data } = response;
-        setRowData(data);
+        setRowData(response.data);
       } catch (error) {
         console.error("Error fetching products:", error);
       }
     };
-
     fetchData();
   }, []);
 
   const onEdit = (row: IRow, action: string) => {
-    console.log(row);
-    console.log(action);
+    console.log(row, action);
   };
 
   useEffect(() => {
     try {
       if (typeof productAction === "string") {
         const updateStatus = async () => {
+          if (productId == null) return;
           switch (productAction) {
             case MODAL_ACTIONS.SETACTIVE:
-              if (productId == null) return;
               await client.patch(`/products/activate/${productId}`);
               break;
             case MODAL_ACTIONS.SETINACTIVE:
-              if (productId == null) return;
+              await client.patch(`/products/deactivate/${productId}`);
+              break;
+            case MODAL_ACTIONS.SETOUTOFSTOCK:
               await client.patch(`/products/deactivate/${productId}`);
               break;
           }
@@ -98,16 +94,13 @@ function Products() {
       text: "You won't be able to revert this!",
       icon: "warning",
       showCancelButton: true,
-      confirmButtonColor: "#3085d6",
-      cancelButtonColor: "#d33",
+      confirmButtonColor: "#10b981",
+      cancelButtonColor: "#ef4444",
       confirmButtonText: "Activate Product",
     }).then(async (result) => {
       if (result.isConfirmed) {
         try {
-          const response = await client.patch(
-            `/products/activate/${row.product_id}`,
-          );
-          console.log(response);
+          await client.patch(`/products/activate/${row.product_id}`);
         } catch (error) {
           console.error("Error activating product:", error);
         }
@@ -127,21 +120,33 @@ function Products() {
   const [colDefs] = useState([
     {
       field: "product_id",
-      width: 150,
       headerName: "#",
+      width: 80,
+      filter: "agNumberColumnFilter",
+      floatingFilter: true,
     },
     {
       field: "product_name",
-      width: 130,
       headerName: "Product Name",
+      flex: 2,
+      filter: "agTextColumnFilter",
+      floatingFilter: true,
     },
     {
       field: "price",
       headerName: "Price",
       width: 130,
-      valueFormatter: (params: ValueFormatterParams) => {
-        return "₱" + params.value.toLocaleString();
-      },
+      filter: "agNumberColumnFilter",
+      floatingFilter: true,
+      valueFormatter: (params: ValueFormatterParams) =>
+        "₱" + Number(params.value).toLocaleString(),
+    },
+    {
+      field: "quantity",
+      headerName: "Stock",
+      width: 100,
+      filter: "agNumberColumnFilter",
+      floatingFilter: true,
     },
     {
       headerName: "Status",
@@ -149,16 +154,14 @@ function Products() {
         <StatusCellRenderer row={params.data} />
       ),
       flex: 1,
+      filter: false,
       editable: false,
     },
     {
       field: "status_id",
       headerName: "Actions",
-      cellRendererParams: {
-        onEdit,
-        onActivate,
-        onDeactivate,
-      },
+      filter: false,
+      cellRendererParams: { onEdit, onActivate, onDeactivate },
       cellRenderer: ActionCell,
       flex: 1,
     },
@@ -166,94 +169,131 @@ function Products() {
 
   const [rowData, setRowData] = useState(null);
 
-  // Apply settings across all columns
-  const defaultColDef = useMemo(() => {
-    return {
+  const defaultColDef = useMemo(
+    () => ({
       flex: 2,
-      filter: true,
       editable: false,
-    };
-  }, []);
+    }),
+    [],
+  );
 
-  // Container: Defines the grid's theme & dimensions.
   return (
-    <div className="w-full h-full bg-base-100 p-6">
-      {/* Header Section */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-800">Products</h1>
-          <p className="text-sm text-gray-500 mt-1">
-            Manage your product inventory
-          </p>
+    <div
+      className="w-full h-full p-6"
+      style={{
+        fontFamily: "'Sora', 'DM Sans', sans-serif",
+        background: "#0f1117",
+        color: "#e2e8f0",
+        minHeight: "100vh",
+      }}
+    >
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <div
+            className="w-10 h-10 rounded-xl flex items-center justify-center"
+            style={{ background: "linear-gradient(135deg, #10b981, #059669)" }}
+          >
+            <Package size={18} className="text-white" />
+          </div>
+          <div>
+            <h1 className="text-xl font-bold text-white">Products</h1>
+            <p className="text-xs mt-0.5" style={{ color: "#475569" }}>
+              Manage your product inventory
+            </p>
+          </div>
         </div>
         <button
           onClick={() => {
             navigate("/admin/manageproduct");
             setProductAction("Add");
           }}
-          className="btn btn-primary gap-2"
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-white transition-all"
+          style={{
+            background: "linear-gradient(135deg, #10b981, #059669)",
+            boxShadow: "0 4px 16px rgba(16,185,129,0.3)",
+          }}
+          onMouseEnter={(e) =>
+            ((e.currentTarget as HTMLElement).style.boxShadow =
+              "0 6px 24px rgba(16,185,129,0.45)")
+          }
+          onMouseLeave={(e) =>
+            ((e.currentTarget as HTMLElement).style.boxShadow =
+              "0 4px 16px rgba(16,185,129,0.3)")
+          }
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-5 w-5"
-            viewBox="0 0 20 20"
-            fill="currentColor"
-          >
-            <path
-              fillRule="evenodd"
-              d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
-              clipRule="evenodd"
-            />
-          </svg>
+          <Plus size={15} />
           Add Product
         </button>
       </div>
 
-      {/* Data Grid Card */}
-      <div className="card bg-white shadow-xl">
-        <div className="card-body p-0">
-          <div
-            className="ag-theme-quartz w-full h-[600px]"
-            style={{
-              width: "100%",
+      {/* Grid */}
+      <div
+        className="rounded-2xl overflow-hidden"
+        style={{ border: "1px solid rgba(255,255,255,0.06)" }}
+      >
+        <div
+          className="ag-theme-quartz-dark w-full"
+          style={
+            {
               height: "600px",
-            }}
-          >
-            <AgGridReact
-              rowData={rowData}
-              columnDefs={colDefs}
-              defaultColDef={defaultColDef}
-            />
-          </div>
+              "--ag-background-color": "#111827",
+              "--ag-header-background-color": "#0f1117",
+              "--ag-odd-row-background-color": "#111827",
+              "--ag-row-hover-color": "rgba(16,185,129,0.05)",
+              "--ag-border-color": "rgba(255,255,255,0.06)",
+              "--ag-header-foreground-color": "#475569",
+              "--ag-foreground-color": "#cbd5e1",
+              "--ag-font-family": "'Sora', 'DM Sans', sans-serif",
+              "--ag-font-size": "12px",
+              "--ag-input-focus-border-color": "#10b981",
+              "--ag-selected-row-background-color": "rgba(16,185,129,0.08)",
+            } as React.CSSProperties
+          }
+        >
+          <AgGridReact
+            rowData={rowData}
+            columnDefs={colDefs}
+            defaultColDef={defaultColDef}
+          />
         </div>
       </div>
     </div>
   );
 }
 
-//* Have to manually pass the onStatusChange funtion for updating status
 const StatusCellRenderer: React.FC<StatusChangeProps> = ({ row }) => {
-  //Used as to tell typescript this is a status type
   const status_id = row.status_id as Status;
   const [status, setStatus] = useState(status_id);
   const { setProductAction } = useModal();
   const { setProductId } = useProduct();
 
-  const statusStyles: Record<number, string> = {
-    1: "select-success bg-success text-white ",
-    2: "select-error bg-error text-white",
-    3: "select-warning bg-warning text-black",
+  const statusStyles: Record<
+    number,
+    { bg: string; color: string; border: string }
+  > = {
+    1: {
+      bg: "rgba(16,185,129,0.12)",
+      color: "#10b981",
+      border: "rgba(16,185,129,0.3)",
+    },
+    2: {
+      bg: "rgba(239,68,68,0.12)",
+      color: "#ef4444",
+      border: "rgba(239,68,68,0.3)",
+    },
+    3: {
+      bg: "rgba(245,158,11,0.12)",
+      color: "#f59e0b",
+      border: "rgba(245,158,11,0.3)",
+    },
   };
 
   useEffect(() => {
-    if (status_id === 1) {
-      setStatus(1);
-    } else if (status_id === 2) {
-      setStatus(2);
-    } else {
-      setStatus(3);
-    }
+    setStatus(status_id === 1 ? 1 : status_id === 2 ? 2 : 3);
   }, []);
+
+  const s = statusStyles[status] ?? statusStyles[1];
 
   return (
     <div className="flex items-center h-full">
@@ -264,52 +304,66 @@ const StatusCellRenderer: React.FC<StatusChangeProps> = ({ row }) => {
           setStatus(action as Status);
           if (action === 1) {
             setProductAction(MODAL_ACTIONS.SETACTIVE);
-          } else {
+          } else if (action === 2) {
             setProductAction(MODAL_ACTIONS.SETINACTIVE);
+          } else {
+            setProductAction(MODAL_ACTIONS.SETOUTOFSTOCK);
           }
           setProductId(row.product_id);
         }}
-        className={`select select-sm select-bordered ${statusStyles[status]} font-[Poppins] outline-none `}
+        style={{
+          background: s.bg,
+          color: s.color,
+          border: `1px solid ${s.border}`,
+          borderRadius: "8px",
+          padding: "3px 8px",
+          fontSize: "11px",
+          fontWeight: "600",
+          outline: "none",
+          cursor: "pointer",
+        }}
       >
-        <option disabled>Set Product Status</option>
-        <option value={1}>Available</option>
-        <option value={2}>Unavailable</option>
+        <option value={1} style={{ background: "#1a2035", color: "#e2e8f0" }}>
+          Active
+        </option>
+        <option value={2} style={{ background: "#1a2035", color: "#e2e8f0" }}>
+          Inactive
+        </option>
+        <option value={3} style={{ background: "#1a2035", color: "#e2e8f0" }}>
+          Out of Stock
+        </option>
       </select>
     </div>
   );
 };
 
-const ActionCell: React.FC<ActionCellProps> = ({
-  data,
-  onEdit,
-  onActivate,
-  onDeactivate,
-}) => {
+// Eye icon removed — only Edit and Barcode actions remain
+const ActionCell: React.FC<ActionCellProps> = ({ data, onEdit }) => {
   if (!data) return null;
 
   const { setProductAction } = useModal();
   const navigate = useNavigate();
-  console.log(onActivate, onDeactivate);
 
   return (
     <div className="flex items-center gap-2 h-full">
-      <button className="btn btn-sm btn-ghost btn-circle hover:bg-blue-50">
-        <EyeIcon className="w-4 h-4 text-blue-600" />
-      </button>
       <button
-        onClick={() => onEdit(data.product_id, "edit")}
-        className="btn btn-sm btn-ghost btn-circle hover:bg-yellow-50"
+        onClick={() => {
+          setProductAction("Update");
+          navigate(`manageproduct/${data.product_id}`);
+        }}
+        className="flex items-center justify-center w-7 h-7 rounded-lg transition-all"
+        style={{ background: "rgba(251,191,36,0.1)", color: "#fbbf24" }}
+        onMouseEnter={(e) =>
+          ((e.currentTarget as HTMLElement).style.background =
+            "rgba(251,191,36,0.22)")
+        }
+        onMouseLeave={(e) =>
+          ((e.currentTarget as HTMLElement).style.background =
+            "rgba(251,191,36,0.1)")
+        }
+        title="Edit product"
       >
-        <EditIcon
-          className="w-4 h-4 text-yellow-600"
-          onClick={() => {
-            setProductAction("Update");
-            navigate(`manageproduct/${data.product_id}`);
-          }}
-        />
-      </button>
-      <button className="btn btn-sm btn-ghost btn-circle hover:bg-purple-50">
-        <BarcodeIcon className="w-4 h-4 text-purple-600" />
+        <EditIcon className="w-3.5 h-3.5" />
       </button>
     </div>
   );

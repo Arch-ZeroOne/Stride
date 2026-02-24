@@ -1,6 +1,6 @@
 import { query } from "../dbconfig";
 import { Sales, SellingItem } from "../types/RequestPayload";
-
+import { deductProductQuantity } from "./ProductServices";
 export const addSale = async (sale: any) => {
   //   const { product_id, profit } = sale;
 
@@ -57,8 +57,7 @@ export const addSale = async (sale: any) => {
   items_data.forEach((item: any, index: number) => {
     //* Creates the base index
     const baseIndex = index * 4;
-    console.log("Index:", index);
-    console.log("Base Index:" + baseIndex);
+
     placeHolders.push(
       `($${baseIndex + 1}, $${baseIndex + 2},$${baseIndex + 3},$${baseIndex + 4})`,
     );
@@ -70,13 +69,16 @@ export const addSale = async (sale: any) => {
       item.unit_price,
     );
   });
-  console.log(placeHolders.join(","));
-  console.log(values);
+
   await query(
     `INSERT INTO selling_item (product_id,sale_id,quantity,unit_price) VALUES ${placeHolders.join(",")}`,
     values,
   );
   await query("COMMIT");
+  for (const item of items_data) {
+    await deductProductQuantity(item.product_id, item.quantity);
+  }
+  //Deduct quantity to items
 
   return true;
 };

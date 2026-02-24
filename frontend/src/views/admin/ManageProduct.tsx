@@ -4,40 +4,44 @@ import Swal from "sweetalert2";
 import * as util from "../../util/cloudinary";
 import { useModal } from "../../context/ModalContext";
 import { useParams } from "react-router";
-const CATEGORIES = [
-  { id: 1, name: "Electronics" },
-  { id: 2, name: "Clothing" },
-  { id: 3, name: "Food & Beverages" },
-  { id: 4, name: "Home & Garden" },
-  { id: 5, name: "Sports & Outdoors" },
-  { id: 6, name: "Books & Media" },
-  { id: 7, name: "Health & Beauty" },
-  { id: 8, name: "Toys & Games" },
-  { id: 9, name: "Automotive" },
-  { id: 10, name: "Office Supplies" },
-  { id: 11, name: "Furniture" },
-  { id: 12, name: "Jewelry & Accessories" },
-  { id: 13, name: "Pet Supplies" },
-  { id: 14, name: "Tools & Hardware" },
-  { id: 15, name: "Baby Products" },
-];
+import {
+  Package,
+  Tag,
+  DollarSign,
+  Hash,
+  ImagePlus,
+  X,
+  Check,
+  ChevronDown,
+} from "lucide-react";
+
+type Categories = {
+  product_category_id: number;
+  category_name: string;
+};
 
 function ManageProduct() {
-  const [product_name, setProductName] = useState<string>();
+  const [product_name, setProductName] = useState<string>("");
   const [imageFile, setImage] = useState<File | null>(null);
-  const [price, setPrice] = useState<string>();
-  const [product_category_id, setCategory] = useState<number>();
-  const [quantity, setQuantity] = useState<number>();
+  const [price, setPrice] = useState<string>("");
+  const [product_category_id, setCategory] = useState<number | undefined>();
+  const [quantity, setQuantity] = useState<number | undefined>();
+  const [categories, setCategories] = useState<Categories[]>([]);
 
-  const imageRef = useRef(null);
+  const imageRef = useRef<HTMLInputElement>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [status, setStatus] = useState<number>();
+  const [status, setStatus] = useState<number>(1);
   const { productAction } = useModal();
   const { id } = useParams();
 
   useEffect(() => {
-    // Retrieves old dara
+    const fetchCategories = async () => {
+      const res = await client.get("/products/categories");
+      setCategories(res.data);
+    };
+    fetchCategories();
+
     if (productAction === "Update") {
       const retrieveOld = async () => {
         const response = await client.get(`products/${id}`);
@@ -48,12 +52,14 @@ function ManageProduct() {
           quantity,
           product_category_id,
           status_id,
+          image,
         } = data;
         setProductName(product_name);
         setPrice(price);
         setCategory(product_category_id);
         setStatus(status_id);
         setQuantity(quantity);
+        if (image) setImagePreview(image);
       };
       retrieveOld();
     }
@@ -62,7 +68,6 @@ function ManageProduct() {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Create preview
       const url = URL.createObjectURL(file);
       setImage(file);
       setImagePreview(url);
@@ -71,10 +76,8 @@ function ManageProduct() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!product_name || !price) {
-      return;
-    }
-    // Validation
+    if (!product_name || !price) return;
+
     if (!product_name.trim()) {
       Swal.fire({
         title: "Error!",
@@ -83,7 +86,6 @@ function ManageProduct() {
       });
       return;
     }
-
     if (!price || parseFloat(price) <= 0) {
       Swal.fire({
         title: "Error!",
@@ -95,62 +97,48 @@ function ManageProduct() {
 
     try {
       setIsSubmitting(true);
+      const image = imageFile ? await util.getUploadUrl(imageFile) : undefined;
+      const payload = {
+        product_name,
+        price,
+        image,
+        product_category_id,
+        quantity,
+        status_id: status,
+      };
 
-      if (imageRef.current) {
-        const image = await util.getUploadUrl(imageFile);
-        const payload = {
-          product_name,
-          price,
-          image,
-          product_category_id,
-          quantity,
-          status_id: status,
-        };
+      if (!productAction) return;
 
-        if (!productAction) return;
-
-        switch (productAction) {
-          case "Add":
-            const response = await client.post("/products", payload);
-            console.log(response);
-            Swal.fire({
-              title: "Success!",
-              text: "Product added successfully",
-              icon: "success",
-              timer: 2000,
-              showConfirmButton: false,
-            });
-            break;
-          case "Update":
-            const updateResponse = await client.patch(
-              `/products/${id}`,
-              payload,
-            );
-
-            console.log(updateResponse);
-
-            Swal.fire({
-              title: "Success!",
-              text: "Product updated successfully",
-              icon: "success",
-              timer: 2000,
-              showConfirmButton: false,
-            });
-
-            break;
-        }
-
-        setImagePreview("");
-        setProductName("");
-        setPrice("");
-        setImage(null);
-        setCategory(0);
+      switch (productAction) {
+        case "Add":
+          await client.post("/products", payload);
+          Swal.fire({
+            title: "Success!",
+            text: "Product added successfully",
+            icon: "success",
+            timer: 2000,
+            showConfirmButton: false,
+          });
+          break;
+        case "Update":
+          await client.patch(`/products/${id}`, payload);
+          Swal.fire({
+            title: "Success!",
+            text: "Product updated successfully",
+            icon: "success",
+            timer: 2000,
+            showConfirmButton: false,
+          });
+          break;
       }
 
-      // Optionally redirect to products page
-      // navigate('/products');
+      setImagePreview(null);
+      setProductName("");
+      setPrice("");
+      setImage(null);
+      setCategory(undefined);
+      setQuantity(undefined);
     } catch (error) {
-      console.error("Error managing product:", error);
       Swal.fire({
         title: "Error!",
         text: "Failed to manage product",
@@ -161,260 +149,399 @@ function ManageProduct() {
     }
   };
 
-  const handleCancel = () => {
-    setImagePreview(null);
+  const inputStyle = {
+    background: "#1a2035",
+    border: "1px solid rgba(255,255,255,0.07)",
+    color: "#e2e8f0",
+    borderRadius: "12px",
+    padding: "10px 14px",
+    fontSize: "13px",
+    outline: "none",
+    width: "100%",
+  };
+
+  const labelStyle = {
+    fontSize: "11px",
+    fontWeight: "600" as const,
+    letterSpacing: "0.05em",
+    textTransform: "uppercase" as const,
+    color: "#475569",
+    marginBottom: "6px",
+    display: "block",
   };
 
   return (
-    <div className="w-full h-full bg-base-100 p-6">
-      {/* Header Section */}
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-800">
-          {productAction === "Add" ? "Add Product" : "Update Product"}
-        </h1>
-        <p className="text-sm text-gray-500 mt-1">
-          Fill in the product details below
-        </p>
-      </div>
-
-      {/* Form Card */}
-      <div className="card bg-white shadow-xl max-w-4xl mr-auto ml-auto">
-        <div className="card-body">
-          <form onSubmit={handleSubmit}>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Left Column - Image Upload */}
-              <div className="space-y-4">
-                <div className="form-control w-full">
-                  <label className="label">
-                    <span className="label-text font-semibold">
-                      Product Image
-                    </span>
-                  </label>
-
-                  {/* Image Preview */}
-                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 mb-4 flex items-center justify-center bg-gray-50 h-64">
-                    {imagePreview ? (
-                      <div className="relative w-full h-full">
-                        <img
-                          src={imagePreview}
-                          alt="Product preview"
-                          className="w-full h-full object-contain rounded"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setImagePreview(null);
-                          }}
-                          className="btn btn-circle btn-sm btn-error absolute top-2 right-2"
-                        >
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="h-4 w-4"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth="2"
-                              d="M6 18L18 6M6 6l12 12"
-                            />
-                          </svg>
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="text-center">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="h-16 w-16 mx-auto text-gray-400 mb-2"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="2"
-                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                          />
-                        </svg>
-                        <p className="text-gray-500 mb-2">No image selected</p>
-                        <p className="text-xs text-gray-400">
-                          PNG, JPG up to 5MB
-                        </p>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* File Input */}
-                  <input
-                    type="file"
-                    accept="image/*"
-                    ref={imageRef}
-                    onChange={handleImageChange}
-                    className="file-input file-input-bordered file-input-primary w-full"
-                  />
-                </div>
-              </div>
-
-              {/* Right Column - Product Details */}
-              <div className="space-y-4">
-                {/* Product Name */}
-                <div className="form-control w-full">
-                  <label className="label">
-                    <span className="label-text font-semibold">
-                      Product Name <span className="text-error">*</span>
-                    </span>
-                  </label>
-                  <input
-                    type="text"
-                    name="product_name"
-                    value={product_name}
-                    onChange={(e) => setProductName(e.target.value)}
-                    placeholder="Enter product name"
-                    className="input input-bordered w-full"
-                    required
-                  />
-                </div>
-
-                {/* Price */}
-                <div className="form-control w-full">
-                  <label className="label">
-                    <span className="label-text font-semibold">
-                      Price (₱) <span className="text-error">*</span>
-                    </span>
-                  </label>
-                  <label className="input-group">
-                    <span className="bg-base-200">₱</span>
-                    <input
-                      type="number"
-                      name="price"
-                      value={price}
-                      onChange={(e) => setPrice(e.target.value)}
-                      placeholder="0.00"
-                      step="0.01"
-                      min="0"
-                      className="input input-bordered w-full"
-                      required
-                    />
-                  </label>
-                </div>
-                <div className="form-control w-full">
-                  <label className="label">
-                    <span className="label-text font-semibold">
-                      Quantity (Amount) <span className="text-error">*</span>
-                    </span>
-                  </label>
-                  <label className="input-group">
-                    <input
-                      type="number"
-                      name="price"
-                      value={quantity}
-                      onChange={(e) => setQuantity(Number(e.target.value))}
-                      placeholder="0"
-                      min="0"
-                      className="input input-bordered w-full"
-                      required
-                    />
-                  </label>
-                </div>
-                <div className="form-control w-full">
-                  <label className="label">
-                    <span className="label-text font-semibold">
-                      Product Category <span className="text-error">*</span>
-                    </span>
-                  </label>
-                  <select
-                    className="select w-full"
-                    value={product_category_id}
-                    required
-                  >
-                    <option value="">Select a category</option>
-                    {CATEGORIES.map((category) => (
-                      <option
-                        key={category.id}
-                        value={category.id}
-                        onClick={() => setCategory(category.id)}
-                      >
-                        {category.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-            </div>
-
-            {/* Form Actions */}
-            <div className="divider"></div>
-            <div className="flex justify-end gap-3">
-              <button
-                type="button"
-                onClick={handleCancel}
-                className="btn btn-ghost"
-                disabled={isSubmitting}
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="btn btn-primary gap-2"
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? (
-                  <>
-                    <span className="loading loading-spinner loading-sm"></span>
-                    Adding...
-                  </>
-                ) : (
-                  <>
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-5 w-5"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                    {productAction === "Add" ? "Add Product" : "Update Product"}
-                  </>
-                )}
-              </button>
-            </div>
-          </form>
+    <div
+      className="w-full h-full p-6"
+      style={{
+        fontFamily: "'Sora', 'DM Sans', sans-serif",
+        background: "#0f1117",
+        color: "#e2e8f0",
+        minHeight: "100vh",
+      }}
+    >
+      {/* Header */}
+      <div className="mb-8 flex items-center gap-3">
+        <div
+          className="w-10 h-10 rounded-xl flex items-center justify-center"
+          style={{ background: "linear-gradient(135deg, #10b981, #059669)" }}
+        >
+          <Package size={18} className="text-white" />
+        </div>
+        <div>
+          <h1 className="text-xl font-bold text-white">
+            {productAction === "Add" ? "Add Product" : "Update Product"}
+          </h1>
+          <p className="text-xs mt-0.5" style={{ color: "#475569" }}>
+            {productAction === "Add"
+              ? "Fill in the details to add a new product"
+              : "Update the product details below"}
+          </p>
         </div>
       </div>
 
-      {/* Helper Info Card */}
-      <div className="alert alert-info shadow-lg mt-6 max-w-4xl mr-auto ml-auto">
-        <div>
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            className="stroke-current flex-shrink-0 w-6 h-6"
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl">
+        {/* ── Left: Image Upload ── */}
+        <div
+          className="rounded-2xl p-5"
+          style={{
+            background: "#111827",
+            border: "1px solid rgba(255,255,255,0.06)",
+          }}
+        >
+          <span style={labelStyle}>Product Image</span>
+
+          {/* Preview box */}
+          <div
+            className="relative rounded-xl overflow-hidden flex items-center justify-center mb-4"
+            style={{
+              height: "220px",
+              background: "#1a2035",
+              border: "1px dashed rgba(255,255,255,0.1)",
+            }}
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-            ></path>
-          </svg>
+            {imagePreview ? (
+              <>
+                <img
+                  src={imagePreview}
+                  alt="Preview"
+                  className="w-full h-full object-contain"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setImagePreview(null);
+                    setImage(null);
+                  }}
+                  className="absolute top-2 right-2 w-7 h-7 flex items-center justify-center rounded-lg transition-all"
+                  style={{
+                    background: "rgba(239,68,68,0.15)",
+                    color: "#ef4444",
+                  }}
+                >
+                  <X size={13} />
+                </button>
+              </>
+            ) : (
+              <div className="flex flex-col items-center gap-2">
+                <div
+                  className="w-12 h-12 rounded-xl flex items-center justify-center"
+                  style={{ background: "rgba(16,185,129,0.1)" }}
+                >
+                  <ImagePlus size={22} style={{ color: "#10b981" }} />
+                </div>
+                <p className="text-xs" style={{ color: "#475569" }}>
+                  No image selected
+                </p>
+                <p className="text-[10px]" style={{ color: "#334155" }}>
+                  PNG, JPG up to 5MB
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* File input styled */}
+          <label
+            className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl cursor-pointer text-xs font-semibold transition-all"
+            style={{
+              background: "rgba(16,185,129,0.1)",
+              color: "#10b981",
+              border: "1px solid rgba(16,185,129,0.2)",
+            }}
+          >
+            <ImagePlus size={13} />
+            {imagePreview ? "Change Image" : "Upload Image"}
+            <input
+              type="file"
+              accept="image/*"
+              ref={imageRef}
+              onChange={handleImageChange}
+              className="hidden"
+            />
+          </label>
+        </div>
+
+        {/* ── Right: Product Details ── */}
+        <div
+          className="rounded-2xl p-5 flex flex-col gap-4"
+          style={{
+            background: "#111827",
+            border: "1px solid rgba(255,255,255,0.06)",
+          }}
+        >
+          {/* Product Name */}
           <div>
-            <h3 className="font-bold">Tips for adding products</h3>
-            <div className="text-xs">
-              • Use clear, high-quality images for better product presentation
-              <br />
-              • Ensure barcode numbers are accurate for inventory tracking
-              <br />• Fields marked with * are required
+            <span style={labelStyle}>
+              Product Name <span style={{ color: "#ef4444" }}>*</span>
+            </span>
+            <div className="relative">
+              <Package
+                size={13}
+                className="absolute left-3 top-1/2 -translate-y-1/2"
+                style={{ color: "#475569" }}
+              />
+              <input
+                type="text"
+                value={product_name}
+                onChange={(e) => setProductName(e.target.value)}
+                placeholder="Enter product name"
+                required
+                style={{ ...inputStyle, paddingLeft: "34px" }}
+                onFocus={(e) =>
+                  (e.currentTarget.style.border =
+                    "1px solid rgba(16,185,129,0.4)")
+                }
+                onBlur={(e) =>
+                  (e.currentTarget.style.border =
+                    "1px solid rgba(255,255,255,0.07)")
+                }
+              />
             </div>
           </div>
+
+          {/* Price */}
+          <div>
+            <span style={labelStyle}>
+              Price (₱) <span style={{ color: "#ef4444" }}>*</span>
+            </span>
+            <div className="relative">
+              <span
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold"
+                style={{ color: "#10b981" }}
+              >
+                ₱
+              </span>
+              <input
+                type="number"
+                value={price}
+                onChange={(e) => setPrice(e.target.value)}
+                placeholder="0.00"
+                step="0.01"
+                min="0"
+                required
+                style={{ ...inputStyle, paddingLeft: "28px" }}
+                onFocus={(e) =>
+                  (e.currentTarget.style.border =
+                    "1px solid rgba(16,185,129,0.4)")
+                }
+                onBlur={(e) =>
+                  (e.currentTarget.style.border =
+                    "1px solid rgba(255,255,255,0.07)")
+                }
+              />
+            </div>
+          </div>
+
+          {/* Quantity */}
+          <div>
+            <span style={labelStyle}>
+              Quantity <span style={{ color: "#ef4444" }}>*</span>
+            </span>
+            <div className="relative">
+              <Hash
+                size={13}
+                className="absolute left-3 top-1/2 -translate-y-1/2"
+                style={{ color: "#475569" }}
+              />
+              <input
+                type="number"
+                value={quantity ?? ""}
+                onChange={(e) => setQuantity(Number(e.target.value))}
+                placeholder="0"
+                min="0"
+                required
+                style={{ ...inputStyle, paddingLeft: "34px" }}
+                onFocus={(e) =>
+                  (e.currentTarget.style.border =
+                    "1px solid rgba(16,185,129,0.4)")
+                }
+                onBlur={(e) =>
+                  (e.currentTarget.style.border =
+                    "1px solid rgba(255,255,255,0.07)")
+                }
+              />
+            </div>
+          </div>
+
+          {/* Category */}
+          <div>
+            <span style={labelStyle}>
+              Category <span style={{ color: "#ef4444" }}>*</span>
+            </span>
+            <div className="relative">
+              <Tag
+                size={13}
+                className="absolute left-3 top-1/2 -translate-y-1/2 z-10"
+                style={{ color: "#475569" }}
+              />
+              <select
+                value={product_category_id ?? ""}
+                onChange={(e) => setCategory(Number(e.target.value))}
+                required
+                style={{
+                  ...inputStyle,
+                  paddingLeft: "34px",
+                  appearance: "none",
+                  cursor: "pointer",
+                }}
+                onFocus={(e) =>
+                  (e.currentTarget.style.border =
+                    "1px solid rgba(16,185,129,0.4)")
+                }
+                onBlur={(e) =>
+                  (e.currentTarget.style.border =
+                    "1px solid rgba(255,255,255,0.07)")
+                }
+              >
+                <option value="" style={{ background: "#1a2035" }}>
+                  Select a category
+                </option>
+                {categories.map((cat) => (
+                  <option
+                    key={cat.product_category_id}
+                    value={cat.product_category_id}
+                    style={{ background: "#1a2035" }}
+                  >
+                    {cat.category_name}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown
+                size={13}
+                className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"
+                style={{ color: "#475569" }}
+              />
+            </div>
+          </div>
+
+          {/* Status — only show on Update */}
+          {productAction === "Update" && (
+            <div>
+              <span style={labelStyle}>Status</span>
+              <div className="flex gap-2">
+                {[
+                  {
+                    id: 1,
+                    label: "Active",
+                    color: "#10b981",
+                    bg: "rgba(16,185,129,0.1)",
+                    border: "rgba(16,185,129,0.3)",
+                  },
+                  {
+                    id: 2,
+                    label: "Inactive",
+                    color: "#ef4444",
+                    bg: "rgba(239,68,68,0.1)",
+                    border: "rgba(239,68,68,0.3)",
+                  },
+                  {
+                    id: 3,
+                    label: "Out of Stock",
+                    color: "#f59e0b",
+                    bg: "rgba(245,158,11,0.1)",
+                    border: "rgba(245,158,11,0.3)",
+                  },
+                ].map((s) => (
+                  <button
+                    key={s.id}
+                    type="button"
+                    onClick={() => setStatus(s.id)}
+                    className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold transition-all"
+                    style={
+                      status === s.id
+                        ? {
+                            background: s.bg,
+                            color: s.color,
+                            border: `1px solid ${s.border}`,
+                          }
+                        : {
+                            background: "rgba(255,255,255,0.03)",
+                            color: "#334155",
+                            border: "1px solid rgba(255,255,255,0.06)",
+                          }
+                    }
+                  >
+                    {status === s.id && <Check size={10} />}
+                    {s.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
+      </div>
+
+      {/* Actions */}
+      <div className="flex items-center gap-3 mt-6 max-w-4xl">
+        <button
+          type="button"
+          onClick={() => {
+            setImagePreview(null);
+            setProductName("");
+            setPrice("");
+            setCategory(undefined);
+            setQuantity(undefined);
+          }}
+          className="px-5 py-2.5 rounded-xl text-sm font-semibold transition-all"
+          style={{
+            background: "rgba(255,255,255,0.05)",
+            color: "#64748b",
+            border: "1px solid rgba(255,255,255,0.06)",
+          }}
+        >
+          Cancel
+        </button>
+        <button
+          onClick={handleSubmit}
+          disabled={isSubmitting}
+          className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold text-white transition-all"
+          style={{
+            background: isSubmitting
+              ? "rgba(16,185,129,0.4)"
+              : "linear-gradient(135deg, #10b981, #059669)",
+            boxShadow: isSubmitting
+              ? "none"
+              : "0 4px 20px rgba(16,185,129,0.3)",
+          }}
+        >
+          {isSubmitting ? (
+            <>
+              <div
+                className="w-4 h-4 rounded-full border-2 border-t-transparent animate-spin"
+                style={{
+                  borderColor: "rgba(255,255,255,0.3)",
+                  borderTopColor: "#fff",
+                }}
+              />
+              {productAction === "Add" ? "Adding..." : "Updating..."}
+            </>
+          ) : (
+            <>
+              <Check size={15} />
+              {productAction === "Add" ? "Add Product" : "Update Product"}
+            </>
+          )}
+        </button>
       </div>
     </div>
   );

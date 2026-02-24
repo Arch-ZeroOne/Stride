@@ -86,6 +86,19 @@ export const deactivateProduct = async (
   }
 };
 
+export const markOutOfStock = async (
+  req: Request<ProductParams>,
+  res: Response,
+) => {
+  try {
+    const deactivatedProduct = await productService.markOutOfStock(
+      req.params.id,
+    );
+    return res.status(200).json(deactivatedProduct);
+  } catch (error) {
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+};
 export const getCategories = async (req: Request, res: Response) => {
   try {
     const categories = await productService.getCategories();
