@@ -1,66 +1,64 @@
 import React, { useState } from "react";
-import Logo from "../icons/image/stride-logo.png";
 import { NavLink, Outlet, useLocation } from "react-router";
 import {
   Package,
-  ReceiptText,
-  GitBranch,
-  Users,
   ChevronLeft,
   Bell,
   Search,
   Settings,
+  ShoppingBag,
+  LayoutDashboard,
 } from "lucide-react";
-import Dashboard from "../../views/admin/Dashboard";
 
 // ─── Nav config ────────────────────────────────────────────────────────────────
 const navItems = [
-  { label: "Dashboard", icon: ReceiptText, to: "/admin/dashboard" },
+  { label: "Dashboard", icon: LayoutDashboard, to: "/admin/dashboard" },
   { label: "Products", icon: Package, to: "/admin/productlist" },
 ];
 
-// Maps any pathname segment → human label + icon for the topbar breadcrumb
-const routeMeta = {
-  dashboard: { label: "Dashboard", icon: ReceiptText },
-  products: { label: "Products", icon: Package },
-
+const routeMeta: Record<string, { label: string; icon: any }> = {
+  dashboard: { label: "Dashboard", icon: LayoutDashboard },
+  productlist: { label: "Products", icon: Package },
+  manageproduct: { label: "Manage Product", icon: Package },
   settings: { label: "Settings", icon: Settings },
 };
 
-// ─── Breadcrumb helper ─────────────────────────────────────────────────────────
+// ─── Breadcrumb ───────────────────────────────────────────────────────────────
 function Breadcrumb() {
   const { pathname } = useLocation();
-
-  // Build segments, skip empty strings
   const segments = pathname.split("/").filter(Boolean);
 
-  if (segments.length === 0) {
+  if (segments.length === 0)
     return (
-      <span className="text-slate-700 font-semibold text-[14px]">Home</span>
+      <span className="text-sm font-semibold" style={{ color: "#e2e8f0" }}>
+        Home
+      </span>
     );
-  }
 
   return (
     <nav className="flex items-center gap-1.5 text-sm">
-      {segments.map((seg: any, i: any) => {
-        const meta: any = routeMeta[seg];
+      {segments.map((seg, i) => {
+        const meta = routeMeta[seg];
         const isLast = i === segments.length - 1;
         const Icon = meta?.icon;
-
         return (
           <React.Fragment key={seg}>
-            {i > 0 && <span className="text-slate-300 select-none">/</span>}
+            {i > 0 && (
+              <span
+                style={{ color: "#334155" }}
+                className="select-none text-xs"
+              >
+                /
+              </span>
+            )}
             <span
-              className={`flex items-center gap-1.5 ${
-                isLast
-                  ? "text-slate-700 font-semibold"
-                  : "text-slate-400 font-medium"
-              }`}
+              className="flex items-center gap-1.5 text-xs font-semibold"
+              style={{ color: isLast ? "#e2e8f0" : "#475569" }}
             >
               {Icon && (
                 <Icon
-                  size={13}
-                  className={isLast ? "text-green-500" : "text-slate-400"}
+                  size={12}
+                  style={{ color: isLast ? "#10b981" : "#475569" }}
                 />
               )}
               {meta?.label ?? seg.charAt(0).toUpperCase() + seg.slice(1)}
@@ -77,77 +75,105 @@ function AppSidebar() {
   const [collapsed, setCollapsed] = useState(false);
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-slate-50">
-      {/* ══ SIDEBAR ══════════════════════════════════════════════════════════ */}
+    <div
+      className="flex h-screen w-screen overflow-hidden"
+      style={{
+        fontFamily: "'Sora', 'DM Sans', sans-serif",
+        background: "#0f1117",
+      }}
+    >
+      {/* ══ SIDEBAR ══ */}
       <aside
         className={`
-          relative flex flex-col h-full bg-[#0d1f12]
-          border-r border-[#1a3320] flex-shrink-0
+          relative flex flex-col h-full flex-shrink-0
           transition-[width] duration-300 ease-in-out overflow-hidden
-          ${collapsed ? "w-[72px]" : "w-60"}
+          ${collapsed ? "w-[68px]" : "w-56"}
         `}
+        style={{
+          background: "#111827",
+          borderRight: "1px solid rgba(255,255,255,0.06)",
+        }}
       >
         {/* Right-edge glow */}
-        <div className="pointer-events-none absolute right-0 top-0 h-full w-px bg-gradient-to-b from-transparent via-green-700/30 to-transparent" />
+        <div
+          className="pointer-events-none absolute right-0 top-0 h-full w-px"
+          style={{
+            background:
+              "linear-gradient(to bottom, transparent, rgba(16,185,129,0.2), transparent)",
+          }}
+        />
 
         {/* ── Logo ── */}
-        <div className="flex items-center gap-3 px-4 py-5 border-b border-[#1a3320] flex-shrink-0">
-          <div className="flex-shrink-0 w-9 h-9 rounded-xl bg-gradient-to-br from-green-500 to-green-700 flex items-center justify-center shadow-lg shadow-green-900/40">
-            <img
-              src={Logo}
-              alt="Stride"
-              className="w-5 h-5 object-contain brightness-200"
-            />
+        <div
+          className="flex items-center gap-3 px-4 py-5 flex-shrink-0"
+          style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}
+        >
+          <div
+            className="flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center"
+            style={{
+              background: "linear-gradient(135deg, #10b981, #059669)",
+              boxShadow: "0 4px 16px rgba(16,185,129,0.35)",
+            }}
+          >
+            <ShoppingBag size={17} className="text-white" />
           </div>
           <span
-            className={`font-bold text-[17px] tracking-tight text-green-50 whitespace-nowrap
-              transition-all duration-200
-              ${collapsed ? "opacity-0 w-0 overflow-hidden" : "opacity-100"}`}
+            className={`font-bold text-base tracking-tight text-white whitespace-nowrap transition-all duration-200 ${
+              collapsed ? "opacity-0 w-0 overflow-hidden" : "opacity-100"
+            }`}
           >
-            Stride<span className="text-green-400">.</span>
+            Swift<span style={{ color: "#10b981" }}>POS</span>
           </span>
         </div>
 
         {/* ── Section label ── */}
         <p
-          className={`px-4 pt-5 pb-1 text-[10px] font-semibold tracking-[0.12em] uppercase
-            text-green-800 select-none whitespace-nowrap overflow-hidden
-            transition-all duration-200
-            ${collapsed ? "opacity-0 h-0 pt-0 pb-0" : "opacity-100"}`}
+          className={`px-4 pt-5 pb-1 text-[10px] font-bold tracking-[0.14em] uppercase select-none whitespace-nowrap overflow-hidden transition-all duration-200 ${
+            collapsed ? "opacity-0 h-0 pt-0 pb-0" : "opacity-100"
+          }`}
+          style={{ color: "#1e293b" }}
         >
           Main Menu
         </p>
 
         {/* ── Nav links ── */}
-        <nav className="flex flex-col gap-1 px-3 pt-2 flex-1 overflow-y-auto overflow-x-hidden">
+        <nav className="flex flex-col gap-1 px-2 pt-2 flex-1 overflow-y-auto overflow-x-hidden">
           {navItems.map(({ label, icon: Icon, to }) => (
             <NavLink
               key={to}
               to={to}
-              className={({ isActive }) =>
-                [
-                  "group relative flex items-center gap-3 px-3 py-2.5 rounded-xl",
-                  "text-[13.5px] font-medium transition-all duration-150 no-underline",
-                  isActive
-                    ? "bg-green-500/15 text-green-400 shadow-[inset_0_0_0_1px_rgba(74,222,128,0.18)]"
-                    : "text-slate-500 hover:bg-white/5 hover:text-slate-300",
-                ].join(" ")
+              className="group relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-all duration-150 no-underline"
+              style={({ isActive }) =>
+                isActive
+                  ? {
+                      background: "rgba(16,185,129,0.12)",
+                      color: "#10b981",
+                      border: "1px solid rgba(16,185,129,0.2)",
+                    }
+                  : {
+                      color: "#475569",
+                      border: "1px solid transparent",
+                    }
               }
             >
               {({ isActive }) => (
                 <>
+                  {/* Active bar */}
                   {isActive && (
-                    <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-[55%] rounded-r-full bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.7)]" />
+                    <span
+                      className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-[55%] rounded-r-full"
+                      style={{
+                        background: "#10b981",
+                        boxShadow: "0 0 8px rgba(16,185,129,0.7)",
+                      }}
+                    />
                   )}
 
                   <Icon
-                    size={17}
+                    size={16}
                     strokeWidth={isActive ? 2.2 : 1.8}
-                    className={`flex-shrink-0 transition-colors duration-150 ${
-                      isActive
-                        ? "text-green-400"
-                        : "text-slate-500 group-hover:text-slate-300"
-                    }`}
+                    className="flex-shrink-0 transition-colors duration-150"
+                    style={{ color: isActive ? "#10b981" : "#475569" }}
                   />
 
                   <span
@@ -160,9 +186,15 @@ function AppSidebar() {
                     {label}
                   </span>
 
-                  {/* Collapsed-mode active dot */}
+                  {/* Collapsed active dot */}
                   {isActive && collapsed && (
-                    <span className="absolute right-2.5 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-green-400 shadow-[0_0_6px_rgba(74,222,128,0.8)]" />
+                    <span
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full"
+                      style={{
+                        background: "#10b981",
+                        boxShadow: "0 0 6px rgba(16,185,129,0.8)",
+                      }}
+                    />
                   )}
                 </>
               )}
@@ -171,28 +203,42 @@ function AppSidebar() {
         </nav>
 
         {/* ── Bottom: Settings + Collapse ── */}
-        <div className="px-3 pb-5 pt-3 flex flex-col gap-1 border-t border-[#1a3320] flex-shrink-0">
+        <div
+          className="px-2 pb-4 pt-3 flex flex-col gap-1 flex-shrink-0"
+          style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}
+        >
           <NavLink
             to="/settings"
-            className={({ isActive }) =>
-              [
-                "group relative flex items-center gap-3 px-3 py-2.5 rounded-xl",
-                "text-[13.5px] font-medium transition-all duration-150 no-underline",
-                isActive
-                  ? "bg-green-500/15 text-green-400 shadow-[inset_0_0_0_1px_rgba(74,222,128,0.18)]"
-                  : "text-slate-600 hover:bg-white/5 hover:text-slate-400",
-              ].join(" ")
+            className="group relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-all duration-150 no-underline"
+            style={({ isActive }) =>
+              isActive
+                ? {
+                    background: "rgba(16,185,129,0.12)",
+                    color: "#10b981",
+                    border: "1px solid rgba(16,185,129,0.2)",
+                  }
+                : {
+                    color: "#334155",
+                    border: "1px solid transparent",
+                  }
             }
           >
             {({ isActive }) => (
               <>
                 {isActive && (
-                  <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-[55%] rounded-r-full bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.7)]" />
+                  <span
+                    className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-[55%] rounded-r-full"
+                    style={{
+                      background: "#10b981",
+                      boxShadow: "0 0 8px rgba(16,185,129,0.7)",
+                    }}
+                  />
                 )}
                 <Settings
-                  size={17}
+                  size={16}
                   strokeWidth={isActive ? 2.2 : 1.8}
                   className="flex-shrink-0"
+                  style={{ color: isActive ? "#10b981" : "#334155" }}
                 />
                 <span
                   className={`whitespace-nowrap transition-all duration-200 ${
@@ -207,12 +253,20 @@ function AppSidebar() {
 
           <button
             onClick={() => setCollapsed(!collapsed)}
-            className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-600
-              hover:bg-white/5 hover:text-slate-400 transition-all duration-150
-              w-full text-left text-[13.5px] font-medium"
+            className="flex items-center gap-3 px-3 py-2.5 rounded-xl w-full text-left text-[13px] font-medium transition-all duration-150"
+            style={{ color: "#334155", border: "1px solid transparent" }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLElement).style.background =
+                "rgba(255,255,255,0.04)";
+              (e.currentTarget as HTMLElement).style.color = "#64748b";
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLElement).style.background = "transparent";
+              (e.currentTarget as HTMLElement).style.color = "#334155";
+            }}
           >
             <ChevronLeft
-              size={17}
+              size={16}
               strokeWidth={1.8}
               className={`flex-shrink-0 transition-transform duration-300 ${
                 collapsed ? "rotate-180" : "rotate-0"
@@ -229,67 +283,115 @@ function AppSidebar() {
         </div>
       </aside>
 
-      {/* ══ MAIN AREA ════════════════════════════════════════════════════════ */}
+      {/* ══ MAIN AREA ══ */}
       <div className="flex flex-col flex-1 min-w-0 h-full overflow-hidden">
         {/* ── Topbar ── */}
-        <header className="flex items-center justify-between h-16 px-6 bg-white border-b border-slate-200/80 flex-shrink-0 z-10">
-          {/* Dynamic breadcrumb */}
+        <header
+          className="flex items-center justify-between h-14 px-6 flex-shrink-0 z-10"
+          style={{
+            background: "#111827",
+            borderBottom: "1px solid rgba(255,255,255,0.06)",
+          }}
+        >
           <Breadcrumb />
 
-          {/* Right actions */}
-          <div className="flex items-center gap-3">
-            {/* Search */}
+          <div className="flex items-center gap-2">
+            {/* Search pill */}
             <div
-              className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-lg
-              bg-slate-100 border border-slate-200 text-slate-400 text-[13px]
-              cursor-text hover:border-slate-300 transition-colors select-none"
+              className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-xl text-xs cursor-text transition-all"
+              style={{
+                background: "#1a2035",
+                border: "1px solid rgba(255,255,255,0.07)",
+                color: "#334155",
+              }}
+              onMouseEnter={(e) =>
+                ((e.currentTarget as HTMLElement).style.borderColor =
+                  "rgba(255,255,255,0.12)")
+              }
+              onMouseLeave={(e) =>
+                ((e.currentTarget as HTMLElement).style.borderColor =
+                  "rgba(255,255,255,0.07)")
+              }
             >
-              <Search size={13} />
+              <Search size={12} />
               <span>Search…</span>
-              <kbd className="ml-1 text-[10px] bg-white border border-slate-200 rounded px-1.5 py-0.5 text-slate-400 font-mono">
+              <kbd
+                className="ml-1 text-[10px] rounded px-1.5 py-0.5 font-mono"
+                style={{
+                  background: "rgba(255,255,255,0.05)",
+                  border: "1px solid rgba(255,255,255,0.08)",
+                  color: "#334155",
+                }}
+              >
                 ⌘K
               </kbd>
             </div>
 
             {/* Bell */}
             <button
-              className="relative w-9 h-9 rounded-xl border border-slate-200 bg-white
-              flex items-center justify-center text-slate-500
-              hover:bg-green-50 hover:border-green-200 hover:text-green-600 transition-all duration-150"
+              className="relative w-8 h-8 rounded-xl flex items-center justify-center transition-all"
+              style={{
+                background: "#1a2035",
+                border: "1px solid rgba(255,255,255,0.07)",
+                color: "#475569",
+              }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLElement).style.borderColor =
+                  "rgba(16,185,129,0.3)";
+                (e.currentTarget as HTMLElement).style.color = "#10b981";
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLElement).style.borderColor =
+                  "rgba(255,255,255,0.07)";
+                (e.currentTarget as HTMLElement).style.color = "#475569";
+              }}
             >
-              <Bell size={16} strokeWidth={1.8} />
-              <span className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-green-400 border border-white" />
+              <Bell size={14} strokeWidth={1.8} />
+              <span
+                className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full"
+                style={{
+                  background: "#10b981",
+                  boxShadow: "0 0 6px rgba(16,185,129,0.8)",
+                }}
+              />
             </button>
 
-            <div className="w-px h-6 bg-slate-200" />
+            <div
+              className="w-px h-5"
+              style={{ background: "rgba(255,255,255,0.06)" }}
+            />
 
-            {/* Avatar + name */}
+            {/* Avatar */}
             <button className="flex items-center gap-2.5 group">
               <div
-                className="w-9 h-9 rounded-xl bg-gradient-to-br from-green-500 to-green-700
-                flex items-center justify-center text-white text-[13px] font-bold
-                shadow-md shadow-green-200 group-hover:shadow-green-300 transition-shadow"
+                className="w-8 h-8 rounded-xl flex items-center justify-center text-white text-xs font-bold"
+                style={{
+                  background: "linear-gradient(135deg, #10b981, #059669)",
+                  boxShadow: "0 2px 8px rgba(16,185,129,0.3)",
+                }}
               >
                 JD
               </div>
               <div className="hidden md:flex flex-col leading-tight text-left">
-                <span className="text-[13px] font-semibold text-slate-700">
+                <span
+                  className="text-xs font-semibold"
+                  style={{ color: "#e2e8f0" }}
+                >
                   Jane Doe
                 </span>
-                <span className="text-[11px] text-slate-400">Admin</span>
+                <span className="text-[10px]" style={{ color: "#475569" }}>
+                  Admin
+                </span>
               </div>
             </button>
           </div>
         </header>
 
-        {/* ── Outlet — fills ALL remaining height, scrolls independently ── */}
-        <main className="flex-1 overflow-y-auto overflow-x-hidden min-h-0">
-          {/*
-            The Outlet renders whatever child route is active.
-            It sits in a fully flexible, scrollable container so any
-            page — short cards, long tables, full-bleed heroes — fills
-            naturally without breaking the chrome.
-          */}
+        {/* ── Outlet ── */}
+        <main
+          className="flex-1 overflow-y-auto overflow-x-hidden min-h-0"
+          style={{ background: "#0f1117" }}
+        >
           <Outlet />
         </main>
       </div>
