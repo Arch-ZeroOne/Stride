@@ -31,6 +31,7 @@ const MODAL_ACTIONS = {
   SETACTIVE: "Activate",
   SETINACTIVE: "Deactivate",
   SETOUTOFSTOCK: "Out of Stock",
+  SETLOWSTOCK: "Low Stock",
 };
 
 interface ActionCellProps extends ICellRendererParams {
@@ -78,6 +79,9 @@ function Products() {
               break;
             case MODAL_ACTIONS.SETOUTOFSTOCK:
               await client.patch(`/products/mark/${productId}`);
+              break;
+            case MODAL_ACTIONS.SETLOWSTOCK:
+              await client.patch(`/products/low/${productId}`);
               break;
           }
         };
@@ -288,10 +292,17 @@ const StatusCellRenderer: React.FC<StatusChangeProps> = ({ row }) => {
       color: "#f59e0b",
       border: "rgba(245,158,11,0.3)",
     },
+    4: {
+      bg: "rgba(59,130,246,0.12)",
+      color: "#3b82f6",
+      border: "rgba(59,130,246,0.3)",
+    },
   };
 
   useEffect(() => {
-    setStatus(status_id === 1 ? 1 : status_id === 2 ? 2 : 3);
+    setStatus(
+      status_id === 1 ? 1 : status_id === 2 ? 2 : status_id === 3 ? 3 : 4,
+    );
   }, []);
 
   const s = statusStyles[status] ?? statusStyles[1];
@@ -308,9 +319,12 @@ const StatusCellRenderer: React.FC<StatusChangeProps> = ({ row }) => {
       } else if (action === 2) {
         await client.patch(`/products/deactivate/${row.product_id}`);
         setProductAction(MODAL_ACTIONS.SETINACTIVE);
-      } else {
-        await client.patch(`/products/deactivate/${row.product_id}`);
+      } else if (action === 3) {
+        await client.patch(`/products/mark/${row.product_id}`);
         setProductAction(MODAL_ACTIONS.SETOUTOFSTOCK);
+      } else {
+        await client.patch(`/products/low/${row.product_id}`);
+        setProductAction(MODAL_ACTIONS.SETLOWSTOCK);
       }
       setProductId(row.product_id);
     } catch (error) {
@@ -346,8 +360,12 @@ const StatusCellRenderer: React.FC<StatusChangeProps> = ({ row }) => {
         <option value={2} style={{ background: "#1a2035", color: "#e2e8f0" }}>
           Inactive
         </option>
+
         <option value={3} style={{ background: "#1a2035", color: "#e2e8f0" }}>
           Out of Stock
+        </option>
+        <option value={4} style={{ background: "#1a2035", color: "#e2e8f0" }}>
+          Low Stock
         </option>
       </select>
       {isUpdating && (

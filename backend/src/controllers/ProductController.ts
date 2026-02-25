@@ -91,10 +91,8 @@ export const markOutOfStock = async (
   res: Response,
 ) => {
   try {
-    const deactivatedProduct = await productService.markOutOfStock(
-      req.params.id,
-    );
-    return res.status(200).json(deactivatedProduct);
+    const markedStock = await productService.markOutOfStock(req.params.id);
+    return res.status(200).json(markedStock);
   } catch (error) {
     return res.status(500).json({ message: "Internal Server Error" });
   }
@@ -123,6 +121,17 @@ export const getByBarcode = async (
     res.status(404).json({ message: "Product Not Found" });
   } catch (error) {
     console.error(error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+export const markLowStock = async (
+  req: Request<ProductParams>,
+  res: Response,
+) => {
+  try {
+    const markedStock = await productService.markLowStock(req.params.id);
+    return res.status(200).json(markedStock);
+  } catch (error) {
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };
