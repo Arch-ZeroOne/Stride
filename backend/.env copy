@@ -1,0 +1,6 @@
+PG_USER ="postgres"
+PG_HOST = "localhost"
+PG_DATABASE = "stride"
+PG_PASSWORD = "08072025"
+PG_PORT = 5433
+DATABASE_URL="postgresql://stride_db_7kre_user:aTzPvRojl49sBNAa7euZAB2roiy3v1KO@dpg-d6evaos50q8c73afjb3g-a.oregon-postgres.render.com/stride_db_7kre"

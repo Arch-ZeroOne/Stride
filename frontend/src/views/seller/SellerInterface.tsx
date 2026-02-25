@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, use } from "react";
 import {
   Search,
   ShoppingCart,
@@ -16,8 +16,12 @@ import {
   Warehouse,
   Receipt,
   ShoppingBag,
+  Banknote,
+  Calculator,
+  LogOut,
 } from "lucide-react";
 
+import { useNavigate } from "react-router";
 import type { SaleData, ItemData } from "../../types/sale";
 import client from "../../axiosClient";
 import Default from "/default/defaultimage.png";
@@ -54,17 +58,22 @@ interface CartItem {
 const initialCart: CartItem[] = [];
 
 function SellerInterface() {
+  const navigate = useNavigate();
   const [total, setTotal] = useState<number>();
   const [products, setProducts] = useState<Product[]>();
   const [categories, setCategories] = useState<Categories[]>();
   const [activeCategory, setActiveCategory] = useState("All Categories");
   const [search, setSearch] = useState("");
-  const [cart, setCart] = useState<CartItem[] | null | undefined>(initialCart);
+  const [cart, setCart] = useState<CartItem[] | undefined>([]);
+  const [amountPaid, setAmountPaid] = useState<string>("");
+  const [change, setChange] = useState<number | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [productsLoading, setProductsLoading] = useState<boolean>(true);
   const [barcodeValue, setBarcodeValue] = useState<string | null | undefined>(
     "",
   );
+
+  const cartRef = useRef<CartItem[] | undefined>(undefined);
 
   useEffect(() => {
     if (cart) {
@@ -73,35 +82,75 @@ function SellerInterface() {
         0,
       );
       setTotal(sumPrice);
+
+      cartRef.current = cart;
     }
   }, [cart]);
+  useEffect(() => {
+    console.log(products);
+  }, [products]);
+
+  const getProducts = async () => {
+    setProductsLoading(true);
+    const allProducts = await client.get("/products");
+    const allCategories = await client.get("/products/categories");
+    setProducts(allProducts.data);
+    setCategories(allCategories.data);
+    setProductsLoading(false);
+  };
 
   useEffect(() => {
-    const getProducts = async () => {
-      setProductsLoading(true);
-      const allProducts = await client.get("/products");
-      const allCategories = await client.get("/products/categories");
-      setProducts(allProducts.data);
-      setCategories(allCategories.data);
-      setProductsLoading(false);
-    };
     getProducts();
   }, []);
+
+  const handleCalculateChange = () => {
+    const paid = parseFloat(amountPaid);
+    if (isNaN(paid) || !total) {
+      Swal.fire({
+        title: "Invalid Amount",
+        text: "Please enter a valid amount paid.",
+        icon: "error",
+      });
+      return;
+    }
+    if (paid < total) {
+      Swal.fire({
+        title: "Insufficient Amount",
+        text: "Amount paid is less than the total.",
+        icon: "error",
+      });
+      setChange(null);
+      return;
+    }
+    setChange(paid - total);
+  };
 
   const updateQty = (id: number, delta: number) => {
     setCart((prev) => {
       if (!prev) return prev;
       const item = prev.find((i) => i.product_id === id);
       if (!item) return prev;
+
       const newQty = Math.max(1, item.qty + delta);
-      const diff = newQty - item.qty;
-      setProducts((prevProducts) =>
-        prevProducts?.map((p) =>
-          p.product_id === id ? { ...p, quantity: p.quantity - diff } : p,
-        ),
-      );
+      const available = products?.find((data) => data.product_id === id);
+      if (available?.quantity === 0) {
+        Swal.fire({
+          title: "Insufficient Amount",
+          text: "Amount paid is less than the total.",
+          icon: "error",
+        });
+        return prev;
+      }
       return prev.map((i) => (i.product_id === id ? { ...i, qty: newQty } : i));
     });
+    const available = products?.find((data) => data.product_id === id);
+    if (available?.quantity !== 0) {
+      setProducts((prevProducts) =>
+        prevProducts?.map((p) =>
+          p.product_id === id ? { ...p, quantity: p.quantity - 1 } : p,
+        ),
+      );
+    }
   };
 
   const removeItem = (id: number) => {
@@ -115,8 +164,9 @@ function SellerInterface() {
         ),
       );
     }
+
     setCart((prev) => {
-      if (!prev) return;
+      if (!prev) return [];
       return prev.filter((item) => item.product_id !== id);
     });
   };
@@ -130,9 +180,10 @@ function SellerInterface() {
       const findItem = products?.find(
         (item: Product) => item.product_id === exists.product_id,
       );
-      const available = findItem?.quantity;
-      if (!available) return;
-      if (exists.qty + 1 > available) {
+
+      if (!findItem) return;
+
+      if (findItem.quantity < 1) {
         Swal.fire({
           title: "No more stock",
           text: "Stock is not available anymore",
@@ -154,21 +205,34 @@ function SellerInterface() {
           p.product_id === productId ? { ...p, quantity: p.quantity - 1 } : p,
         ),
       );
-      setCart((prev: any) => [
-        ...prev,
-        {
-          product_id: productToAdd?.product_id,
-          product_name: productToAdd?.product_name,
-          price: Number(productToAdd?.price),
-          qty: 1,
-          total: Number(productToAdd?.price),
-        },
-      ]);
+
+      setCart((prev: any) => {
+        if (!prev) return [];
+
+        return [
+          ...prev,
+          {
+            product_id: productToAdd?.product_id,
+            product_name: productToAdd?.product_name,
+            price: Number(productToAdd?.price),
+            qty: 1,
+            total: Number(productToAdd?.price),
+          },
+        ];
+      });
     }
   };
 
   const handlePayment = async () => {
     if (cart) {
+      if (Number(amountPaid) === 0) {
+        Swal.fire({
+          title: "No Payment Input!!",
+          text: "You cannot check out when you dont input payment",
+          icon: "error",
+        });
+        return;
+      }
       if (cart.length === 0) {
         Swal.fire({
           title: "Cart Empty!!",
@@ -197,8 +261,11 @@ function SellerInterface() {
           text: "You can now receive the payment",
           icon: "success",
         });
+        await getProducts();
         setLoading(false);
         setCart([]);
+        setAmountPaid("");
+        setChange(null);
         return;
       }
       Swal.fire({ title: "Error", text: "Error Occurred", icon: "error" });
@@ -208,16 +275,13 @@ function SellerInterface() {
   const handleBarcodeScan = async (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
       const find = await client.get(`/products/get/${barcodeValue}`);
-
       const { data } = find;
-
       if (data.length !== 0 && data[0].status_id === 2) {
         Swal.fire({
           title: "Error",
           text: "Product is Marked Deactivated Please Contact Admin for the issue",
           icon: "error",
         });
-
         return;
       }
       if (data.length !== 0 && data[0].status_id === 3) {
@@ -226,18 +290,11 @@ function SellerInterface() {
           text: "Product is Out Of Stock Please Contact the admin for stock checking",
           icon: "error",
         });
-
         return;
       }
-
       if (data.length === 0) {
-        Swal.fire({
-          title: "Error",
-          text: "Product not found",
-          icon: "error",
-        });
+        Swal.fire({ title: "Error", text: "Product not found", icon: "error" });
       }
-
       if (data.length !== 0) {
         addToCart(data[0], data[0].product_id);
       }
@@ -250,21 +307,15 @@ function SellerInterface() {
     const matchesSearch = p.product_name
       .toLowerCase()
       .includes(search.toLowerCase());
-
     const matchedCategoryId = categories?.find(
       (c) => c.category_name === activeCategory,
     )?.product_category_id;
-
     const matchesCategory =
       activeCategory === "All Categories" ||
       matchedCategoryId === p.product_category_id;
-
     const matchesAvailable = Number(p.status_id) === 1;
-
     return matchesSearch && matchesCategory && matchesAvailable;
   });
-
-  console.log(filteredProducts);
 
   const cartCount = cart?.reduce((acc, item) => acc + item.qty, 0) ?? 0;
 
@@ -304,7 +355,6 @@ function SellerInterface() {
             </span>
           </div>
         </div>
-
         <div className="flex items-center gap-2">
           <div
             className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs"
@@ -318,6 +368,41 @@ function SellerInterface() {
             style={{ background: "rgba(255,255,255,0.05)", color: "#94a3b8" }}
           >
             <Home size={16} />
+          </button>
+          {/* Handling Logout */}
+          <button
+            onClick={() => {
+              Swal.fire({
+                title: "Do you want to log out??",
+                text: "You will be logged out to login page!",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#3085d6",
+                cancelButtonColor: "#d33",
+                confirmButtonText: "Log Out",
+              }).then((result) => {
+                if (result.isConfirmed) {
+                  navigate("/signin");
+                }
+              });
+            }}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all"
+            style={{
+              background: "rgba(239,68,68,0.1)",
+              color: "#ef4444",
+              border: "1px solid rgba(239,68,68,0.15)",
+            }}
+            onMouseEnter={(e) =>
+              ((e.currentTarget as HTMLElement).style.background =
+                "rgba(239,68,68,0.2)")
+            }
+            onMouseLeave={(e) =>
+              ((e.currentTarget as HTMLElement).style.background =
+                "rgba(239,68,68,0.1)")
+            }
+          >
+            <LogOut size={13} />
+            Logout
           </button>
         </div>
       </header>
@@ -333,7 +418,6 @@ function SellerInterface() {
             className="flex gap-3 p-4"
             style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}
           >
-            {/* Product Search */}
             <div
               className="flex items-center gap-2 rounded-xl px-3 py-2.5 flex-1"
               style={{
@@ -351,8 +435,6 @@ function SellerInterface() {
                 onChange={(e) => setSearch(e.target.value)}
               />
             </div>
-
-            {/* Barcode Scanner */}
             <div
               className="flex items-center gap-2 rounded-xl px-3 py-2.5 flex-1"
               style={{
@@ -450,7 +532,6 @@ function SellerInterface() {
                       (e.currentTarget as HTMLElement).style.boxShadow = "none";
                     }}
                   >
-                    {/* Stock badge */}
                     <div className="absolute top-2 right-2 z-10">
                       <span
                         className="text-[10px] font-bold px-2 py-0.5 rounded-full"
@@ -465,8 +546,6 @@ function SellerInterface() {
                         {product.quantity}
                       </span>
                     </div>
-
-                    {/* Image */}
                     <div
                       className="flex items-center justify-center h-28 rounded-t-2xl overflow-hidden"
                       style={{ background: "#1e2535" }}
@@ -477,7 +556,6 @@ function SellerInterface() {
                         alt={product.product_name}
                       />
                     </div>
-
                     <div className="p-3">
                       <p
                         className="text-xs font-semibold leading-tight"
@@ -550,7 +628,11 @@ function SellerInterface() {
               )}
             </div>
             <button
-              onClick={() => setCart([])}
+              onClick={() => {
+                setCart([]);
+                setAmountPaid("");
+                setChange(null);
+              }}
               className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg transition-all"
               style={{ background: "rgba(239,68,68,0.1)", color: "#ef4444" }}
             >
@@ -658,8 +740,6 @@ function SellerInterface() {
                     {item.product_name}
                   </span>
                 </div>
-
-                {/* Qty Controls */}
                 <div className="flex items-center justify-center gap-1">
                   <button
                     onClick={() => updateQty(item.product_id, -1)}
@@ -688,14 +768,12 @@ function SellerInterface() {
                     <Plus size={10} />
                   </button>
                 </div>
-
                 <span
                   className="text-xs font-semibold text-right"
                   style={{ color: "#e2e8f0" }}
                 >
                   ${(item.price * item.qty).toLocaleString()}
                 </span>
-
                 <button
                   onClick={() => removeItem(item.product_id)}
                   className="w-7 h-7 flex items-center justify-center rounded-lg ml-2 transition-all"
@@ -723,9 +801,9 @@ function SellerInterface() {
             className="p-5"
             style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}
           >
-            {/* Totals */}
+            {/* Totals card */}
             <div
-              className="rounded-2xl p-4 mb-4"
+              className="rounded-2xl p-4 mb-3"
               style={{
                 background: "#1a2035",
                 border: "1px solid rgba(255,255,255,0.06)",
@@ -745,17 +823,7 @@ function SellerInterface() {
                   })}
                 </span>
               </div>
-              <div className="flex justify-between items-center mb-3">
-                <span className="text-xs" style={{ color: "#475569" }}>
-                  Discount
-                </span>
-                <span
-                  className="text-xs font-semibold"
-                  style={{ color: "#f59e0b" }}
-                >
-                  —
-                </span>
-              </div>
+
               <div
                 className="pt-3 flex justify-between items-center"
                 style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}
@@ -776,9 +844,118 @@ function SellerInterface() {
               </div>
             </div>
 
-            {/* Actions */}
+            {/* ── Cash Tender ── */}
+            <div
+              className="rounded-2xl p-4 mb-3"
+              style={{
+                background: "#1a2035",
+                border: "1px solid rgba(255,255,255,0.06)",
+              }}
+            >
+              {/* Amount Paid input */}
+              <p
+                className="text-[10px] font-bold uppercase tracking-widest mb-2"
+                style={{ color: "#334155" }}
+              >
+                Cash Tender
+              </p>
+              <div className="flex gap-2 mb-3">
+                <div
+                  className="flex items-center gap-2 flex-1 rounded-xl px-3 py-2.5"
+                  style={{
+                    background: "#0f1117",
+                    border: "1px solid rgba(255,255,255,0.07)",
+                  }}
+                  onFocus={(e) =>
+                    ((e.currentTarget as HTMLElement).style.borderColor =
+                      "rgba(16,185,129,0.4)")
+                  }
+                  onBlur={(e) =>
+                    ((e.currentTarget as HTMLElement).style.borderColor =
+                      "rgba(255,255,255,0.07)")
+                  }
+                >
+                  <Banknote
+                    size={13}
+                    style={{ color: "#10b981", flexShrink: 0 }}
+                  />
+                  <input
+                    type="number"
+                    min="0"
+                    placeholder="Amount paid"
+                    value={amountPaid}
+                    onChange={(e) => {
+                      setAmountPaid(e.target.value);
+                      setChange(null);
+                    }}
+                    className="bg-transparent outline-none text-sm w-full"
+                    style={{ color: "#e2e8f0" }}
+                  />
+                </div>
+                <button
+                  onClick={handleCalculateChange}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all"
+                  style={{
+                    background: "rgba(16,185,129,0.12)",
+                    color: "#10b981",
+                    border: "1px solid rgba(16,185,129,0.25)",
+                  }}
+                  onMouseEnter={(e) =>
+                    ((e.currentTarget as HTMLElement).style.background =
+                      "rgba(16,185,129,0.22)")
+                  }
+                  onMouseLeave={(e) =>
+                    ((e.currentTarget as HTMLElement).style.background =
+                      "rgba(16,185,129,0.12)")
+                  }
+                >
+                  <Calculator size={13} />
+                  Calc
+                </button>
+              </div>
+
+              {/* Change display */}
+              <div
+                className="flex justify-between items-center rounded-xl px-3 py-2.5"
+                style={{
+                  background:
+                    change !== null && change >= 0
+                      ? "rgba(16,185,129,0.08)"
+                      : "rgba(255,255,255,0.03)",
+                  border:
+                    change !== null && change >= 0
+                      ? "1px solid rgba(16,185,129,0.2)"
+                      : "1px solid rgba(255,255,255,0.05)",
+                }}
+              >
+                <span
+                  className="text-xs font-semibold"
+                  style={{ color: "#475569" }}
+                >
+                  Change
+                </span>
+                <span
+                  className="text-sm font-black"
+                  style={{
+                    color:
+                      change === null
+                        ? "#334155"
+                        : change >= 0
+                          ? "#10b981"
+                          : "#ef4444",
+                    letterSpacing: "-0.02em",
+                  }}
+                >
+                  {change === null
+                    ? "—"
+                    : `$${change.toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
+                </span>
+              </div>
+            </div>
+
+            {/* Process Payment button */}
             <button
-              className="w-full flex items-center justify-center gap-2 font-bold py-3.5 rounded-2xl transition-all text-sm tracking-wide text-white mb-2"
+              className="w-full flex items-center justify-center gap-2 font-bold py-3.5 rounded-2xl transition-all text-sm tracking-wide text-white"
               style={{
                 background: "linear-gradient(135deg, #10b981, #059669)",
                 boxShadow: "0 4px 20px rgba(16,185,129,0.3)",

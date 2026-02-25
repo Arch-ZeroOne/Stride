@@ -6,10 +6,15 @@ import Products from "./views/admin/Products";
 import ManageProduct from "./views/admin/ManageProduct";
 import Dashboard from "./views/admin/Dashboard";
 import SellerInterface from "./views/seller/SellerInterface";
+import LandingPage from "./views/landing/LandingPage";
 const router = createBrowserRouter([
   {
-    path: "/",
+    path: "/signin",
     element: <Login />,
+  },
+  {
+    path: "/",
+    element: <LandingPage />,
   },
 
   {
