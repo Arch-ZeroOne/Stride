@@ -77,7 +77,7 @@ function Products() {
               await client.patch(`/products/deactivate/${productId}`);
               break;
             case MODAL_ACTIONS.SETOUTOFSTOCK:
-              await client.patch(`/products/deactivate/${productId}`);
+              await client.patch(`/products/mark/${productId}`);
               break;
           }
         };
