@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, use } from "react";
+import { useEffect, useState, useRef } from "react";
 import {
   Search,
   ShoppingCart,
@@ -54,8 +54,6 @@ interface CartItem {
   taxRate: number;
   total: number;
 }
-
-const initialCart: CartItem[] = [];
 
 function SellerInterface() {
   const navigate = useNavigate();
