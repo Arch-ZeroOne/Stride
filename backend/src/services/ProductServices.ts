@@ -87,9 +87,8 @@ export const updateProduct = async (id: string, product: Product) => {
     quantity,
   ];
 
-  console.log("Status ID:" + status_id);
-
   if (!status_id) {
+    console.log("No Status Id");
     status_id = 1;
   }
 
@@ -150,7 +149,6 @@ export const activateProduct = async (id: string) => {
     [id],
   );
 
-  console.log(rows);
   return rows;
 };
 
