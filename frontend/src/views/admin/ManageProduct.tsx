@@ -120,6 +120,7 @@ function ManageProduct() {
           });
           break;
         case "Update":
+          console.log(payload);
           await client.patch(`/products/${id}`, payload);
           Swal.fire({
             title: "Success!",
