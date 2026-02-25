@@ -29,7 +29,7 @@ const checkAndUpdateStockStatus = async (id: string | number) => {
   }
 
   //If back in stock and stock is equal or below 10
-  if ((quantity <= 10 && quantity > 0 && status_id === 1) || status_id === 3) {
+  if ((quantity <= 10 && status_id === 1) || status_id === 3) {
     console.log("Back to low Stock");
     await query("UPDATE product SET status_id = 4 WHERE product_id = $1", [id]);
   }
@@ -146,20 +146,22 @@ export const activateProduct = async (id: string) => {
 
   if (!check[0]) throw new Error("Product not found");
 
-  if (check[0].quantity <= 0) {
+  if (check[0].quantity === 0) {
     throw new Error("Cannot activate a product with zero stock");
   }
 
-  if (check[0].quantity <= 10 && check[0].quantity > 0) {
+  if (check[0].quantity <= 10) {
     throw new Error("Cannot activate a product with low stock");
   }
 
-  const rows = await query(
-    "UPDATE product SET status_id = 1 WHERE product_id = $1 RETURNING *",
-    [id],
-  );
+  if (check[0].quantity > 10) {
+    const rows = await query(
+      "UPDATE product SET status_id = 1 WHERE product_id = $1 RETURNING *",
+      [id],
+    );
 
-  return rows;
+    return rows;
+  }
 };
 
 export const deactivateProduct = async (id: string) => {
@@ -181,10 +183,13 @@ export const markOutOfStock = async (id: string) => {
     );
   }
 
-  if (check[0].quantity <= 10 && check[0].quantity > 0) {
+  if (check[0].quantity <= 10) {
     throw new Error(
       "Cannot mark out of stock  a product with greater than 0 and lesser and equal to 10 stock",
     );
+  }
+
+  if (check[0].quantity === 0) {
   }
   const { rows } = await query(
     "UPDATE product SET status_id = 3 WHERE product_id = $1 RETURNING *",
@@ -206,10 +211,6 @@ export const getByBarcode = async (barcode: string) => {
   return rows;
 };
 export const markLowStock = async (id: string) => {
-  const { rows } = await query(
-    "UPDATE product SET status_id = 4 WHERE product_id = $1 RETURNING *",
-    [id],
-  );
   const { rows: check } = await query(
     "SELECT * FROM product WHERE product_id = $1",
     [id],
@@ -226,5 +227,10 @@ export const markLowStock = async (id: string) => {
       "Cannot mark low  stock  a product with lesser than 0  stock",
     );
   }
+
+  const { rows } = await query(
+    "UPDATE product SET status_id = 4 WHERE product_id = $1 RETURNING *",
+    [id],
+  );
   return rows;
 };
