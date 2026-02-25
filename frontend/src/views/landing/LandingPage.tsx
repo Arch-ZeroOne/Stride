@@ -123,7 +123,7 @@ function LandingPage() {
 
           {/* CTA */}
           <button
-            onClick={() => navigate("/admin/login")}
+            onClick={() => navigate("/signin")}
             className="btn btn-sm"
             style={{
               background: "linear-gradient(135deg, #10b981, #059669)",
@@ -234,7 +234,7 @@ function LandingPage() {
         {/* CTA buttons */}
         <div className="flex flex-wrap items-center justify-center gap-3 mb-16">
           <button
-            onClick={() => navigate("/admin/login")}
+            onClick={() => navigate("/signin")}
             className="btn btn-lg"
             style={{
               background: "linear-gradient(135deg, #10b981, #059669)",
