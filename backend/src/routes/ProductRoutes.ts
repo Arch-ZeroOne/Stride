@@ -11,7 +11,6 @@ router.post("/products", productController.addProduct);
 router.patch("/products/:id", productController.updateProduct);
 router.patch("/products/activate/:id", productController.activateProduct);
 router.patch("/products/mark/:id", productController.markOutOfStock);
-router.patch("/products/low/:id", productController.markLowStock);
 router.patch("/products/deactivate/:id", productController.deactivateProduct);
 
 export default router;

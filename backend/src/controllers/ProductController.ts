@@ -124,14 +124,3 @@ export const getByBarcode = async (
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };
-export const markLowStock = async (
-  req: Request<ProductParams>,
-  res: Response,
-) => {
-  try {
-    const markedStock = await productService.markLowStock(req.params.id);
-    return res.status(200).json(markedStock);
-  } catch (error) {
-    return res.status(500).json({ message: "Internal Server Error" });
-  }
-};

@@ -461,13 +461,6 @@ function ManageProduct() {
                     bg: "rgba(245,158,11,0.1)",
                     border: "rgba(245,158,11,0.3)",
                   },
-                  {
-                    id: 4,
-                    label: "Low Stock",
-                    bg: "rgba(59,130,246,0.12)",
-                    color: "#3b82f6",
-                    border: "rgba(59,130,246,0.3)",
-                  },
                 ].map((s) => (
                   <button
                     key={s.id}

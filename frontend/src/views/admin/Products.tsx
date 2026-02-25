@@ -319,12 +319,9 @@ const StatusCellRenderer: React.FC<StatusChangeProps> = ({ row }) => {
       } else if (action === 2) {
         await client.patch(`/products/deactivate/${row.product_id}`);
         setProductAction(MODAL_ACTIONS.SETINACTIVE);
-      } else if (action === 3) {
+      } else {
         await client.patch(`/products/mark/${row.product_id}`);
         setProductAction(MODAL_ACTIONS.SETOUTOFSTOCK);
-      } else {
-        await client.patch(`/products/low/${row.product_id}`);
-        setProductAction(MODAL_ACTIONS.SETLOWSTOCK);
       }
       setProductId(row.product_id);
     } catch (error) {
