@@ -78,7 +78,7 @@ function Products() {
               break;
             case MODAL_ACTIONS.SETOUTOFSTOCK:
               console.log("Set out of stock");
-              await client.patch(`/products/deactivate/${productId}`);
+              await client.patch(`/products/mark/${productId}`);
               break;
           }
         };
