@@ -77,6 +77,7 @@ function Products() {
               await client.patch(`/products/deactivate/${productId}`);
               break;
             case MODAL_ACTIONS.SETOUTOFSTOCK:
+              console.log("Set out of stock");
               await client.patch(`/products/deactivate/${productId}`);
               break;
           }
@@ -309,7 +310,7 @@ const StatusCellRenderer: React.FC<StatusChangeProps> = ({ row }) => {
         await client.patch(`/products/deactivate/${row.product_id}`);
         setProductAction(MODAL_ACTIONS.SETINACTIVE);
       } else {
-        await client.patch(`/products/deactivate/${row.product_id}`);
+        await client.patch(`/products/mark/${row.product_id}`);
         setProductAction(MODAL_ACTIONS.SETOUTOFSTOCK);
       }
       setProductId(row.product_id);

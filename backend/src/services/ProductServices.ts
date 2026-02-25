@@ -87,8 +87,6 @@ export const updateProduct = async (id: string, product: Product) => {
     quantity,
   ];
 
-  console.log("Status ID:" + status_id);
-
   if (!status_id) {
     status_id = 1;
   }
