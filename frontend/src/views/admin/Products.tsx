@@ -77,10 +77,6 @@ function Products() {
               await client.patch(`/products/deactivate/${productId}`);
               break;
             case MODAL_ACTIONS.SETOUTOFSTOCK:
-<<<<<<< HEAD
-              console.log("Set out of stock");
-=======
->>>>>>> local-stride
               await client.patch(`/products/mark/${productId}`);
               break;
           }
