@@ -29,9 +29,13 @@ const checkAndUpdateStockStatus = async (id: string | number) => {
   }
 
   //If back in stock and stock is equal or below 10
-  if ((quantity <= 10 && quantity > 0 && status_id === 1) || status_id === 3) {
-    console.log("Back to low Stock");
+
+  if (quantity <= 10 && quantity != 0 && status_id === 1) {
     await query("UPDATE product SET status_id = 4 WHERE product_id = $1", [id]);
+  }
+  if (quantity <= 0 && status_id === 4) {
+    console.log("Back to Out of Stock");
+    await query("UPDATE product SET status_id = 3 WHERE product_id = $1", [id]);
   }
 };
 

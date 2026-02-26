@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect, useMemo, useRef } from "react";
 import type {
   ICellRendererParams,
   ValueFormatterParams,
@@ -12,8 +12,10 @@ import Swal from "sweetalert2";
 import type { Status } from "../../types/status";
 import client from "../../axiosClient";
 import { useNavigate } from "react-router";
-import { Plus, Package } from "lucide-react";
-
+import { Plus, Package, BarcodeIcon } from "lucide-react";
+import Barcode from "react-barcode";
+import { useBarcode } from "../../context/BarcodeContext";
+import { useReactToPrint } from "react-to-print";
 ModuleRegistry.registerModules([AllCommunityModule]);
 
 interface IRow {
@@ -47,6 +49,7 @@ interface StatusChangeProps {
 function Products() {
   const { productAction, setProductAction } = useModal();
   const { productId } = useProduct();
+  const { barcode } = useBarcode();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -123,16 +126,9 @@ function Products() {
 
   const [colDefs] = useState([
     {
-      field: "product_id",
-      headerName: "#",
-      width: 80,
-      filter: "agNumberColumnFilter",
-      floatingFilter: true,
-    },
-    {
       field: "product_name",
       headerName: "Product Name",
-      flex: 2,
+      flex: 3,
       filter: "agTextColumnFilter",
       floatingFilter: true,
     },
@@ -153,11 +149,18 @@ function Products() {
       floatingFilter: true,
     },
     {
+      field: "barcode",
+      headerName: "Barcode",
+      filter: false,
+      cellRenderer: BarcodeRenderer,
+      flex: 3,
+    },
+    {
       headerName: "Status",
       cellRenderer: (params: ICellRendererParams) => (
         <StatusCellRenderer row={params.data} />
       ),
-      flex: 1,
+      flex: 2,
       filter: false,
       editable: false,
     },
@@ -167,7 +170,7 @@ function Products() {
       filter: false,
       cellRendererParams: { onEdit, onActivate, onDeactivate },
       cellRenderer: ActionCell,
-      flex: 1,
+      flex: 2,
     },
   ]);
 
@@ -180,6 +183,9 @@ function Products() {
     }),
     [],
   );
+  const gridOptions = {
+    rowHeight: 60,
+  };
 
   return (
     <div
@@ -191,6 +197,7 @@ function Products() {
         minHeight: "100vh",
       }}
     >
+      {barcode ? <BarcodeModal barcode={barcode} /> : ""}
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
@@ -259,6 +266,7 @@ function Products() {
             rowData={rowData}
             columnDefs={colDefs}
             defaultColDef={defaultColDef}
+            gridOptions={gridOptions}
           />
         </div>
       </div>
@@ -384,6 +392,7 @@ const ActionCell: React.FC<ActionCellProps> = ({ data, onEdit }) => {
 
   const { setProductAction } = useModal();
   const navigate = useNavigate();
+  const { setBarcode } = useBarcode();
 
   return (
     <div className="flex items-center gap-2 h-full">
@@ -406,7 +415,67 @@ const ActionCell: React.FC<ActionCellProps> = ({ data, onEdit }) => {
       >
         <EditIcon className="w-3.5 h-3.5" />
       </button>
+      <button
+        onClick={() => {
+          const barcodeModal = document.getElementById(
+            "my_modal_1",
+          ) as HTMLDialogElement;
+
+          setBarcode(data.barcode);
+          barcodeModal.showModal();
+        }}
+        className="flex items-center justify-center w-7 h-7 rounded-lg transition-all"
+        style={{ background: "rgba(251,191,36,0.1)", color: "#fbbf24" }}
+        onMouseEnter={(e) =>
+          ((e.currentTarget as HTMLElement).style.background =
+            "rgba(251,191,36,0.22)")
+        }
+        onMouseLeave={(e) =>
+          ((e.currentTarget as HTMLElement).style.background =
+            "rgba(251,191,36,0.1)")
+        }
+        title="View Barcode"
+      >
+        <BarcodeIcon className="w-3.5 h-3.5" />
+      </button>
     </div>
+  );
+};
+
+const BarcodeRenderer = ({ data }: any) => {
+  const barcode = data.barcode;
+  return <Barcode value={barcode} width={0.9} height={30} fontSize={10} />;
+};
+
+const BarcodeModal = ({ barcode }: any) => {
+  const componentRef = useRef<HTMLDivElement>(null);
+
+  const printBarcode = useReactToPrint({
+    contentRef: componentRef,
+  });
+  return (
+    <>
+      {/* Open the modal using document.getElementById('ID').showModal() method */}
+
+      <dialog id="my_modal_1" className="modal text-black">
+        <div className="modal-box">
+          <div className="flex justify-center" ref={componentRef}>
+            <Barcode value={barcode} displayValue={true} format="CODE128" />
+          </div>
+
+          <div className="modal-action">
+            <button className="btn btn-primary" onClick={printBarcode}>
+              Print Barcode
+            </button>
+            <form method="dialog">
+              {/* if there is a button in form, it will close the modal */}
+
+              <button className="btn btn-error text-white">Close</button>
+            </form>
+          </div>
+        </div>
+      </dialog>
+    </>
   );
 };
 

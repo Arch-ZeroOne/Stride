@@ -4,11 +4,14 @@ import "./index.css";
 import { RouterProvider } from "react-router";
 import router from "./router.tsx";
 import { ModalContextProvider } from "./context/ModalContext.tsx";
+import { BarcodeContextProvider } from "./context/BarcodeContext.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <ModalContextProvider>
-      <RouterProvider router={router} />
+      <BarcodeContextProvider>
+        <RouterProvider router={router} />
+      </BarcodeContextProvider>
     </ModalContextProvider>
   </StrictMode>,
 );
