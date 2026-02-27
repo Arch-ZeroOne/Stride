@@ -132,7 +132,7 @@ function sharedOptions(yLabel = "Revenue"): ChartOptions<"line"> {
         callbacks: {
           label: (ctx) => {
             const y = ctx.parsed.y ?? 0; // fallback to 0 if null
-            return ` ${ctx.dataset.label}: $${fmtFull(y)}`;
+            return ` ${ctx.dataset.label}: ₱${fmtFull(y)}`;
           },
         },
       },
@@ -157,7 +157,7 @@ function sharedOptions(yLabel = "Revenue"): ChartOptions<"line"> {
           color: P.muted,
           font: { family: "Inter, sans-serif", size: 11 },
           callback: (val) =>
-            `$${new Intl.NumberFormat("en-US", { notation: "compact" }).format(val as number)}`,
+            `₱${new Intl.NumberFormat("en-US", { notation: "compact" }).format(val as number)}`,
         },
       },
     },
@@ -180,7 +180,7 @@ const StatCard: React.FC<StatCardProps> = ({
   title,
   current,
   previous,
-  prefix = "$",
+  prefix = "₱",
   glowClass,
   barClass,
   icon,
@@ -419,9 +419,9 @@ const Dashboard: React.FC = () => {
   );
 
   // ── Chart options ───────────────────────────────────────────────────────────
-  const lineOpts = useMemo(() => sharedOptions("Revenue ($)"), []);
+  const lineOpts = useMemo(() => sharedOptions("Revenue (₱)"), []);
   const barOpts = useMemo(
-    () => sharedOptions("Revenue ($)") as unknown as ChartOptions<"bar">,
+    () => sharedOptions("Revenue (₱)") as unknown as ChartOptions<"bar">,
     [],
   );
   const horizBarOpts: ChartOptions<"bar"> = useMemo(
