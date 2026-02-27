@@ -575,7 +575,7 @@ function SellerInterface() {
                             color: "#10b981",
                           }}
                         >
-                          ${Number(product.price).toLocaleString()}
+                          ₱{Number(product.price).toLocaleString()}
                         </span>
                         <div
                           className="w-6 h-6 flex items-center justify-center rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
@@ -770,7 +770,7 @@ function SellerInterface() {
                   className="text-xs font-semibold text-right"
                   style={{ color: "#e2e8f0" }}
                 >
-                  ${(item.price * item.qty).toLocaleString()}
+                  ₱{(item.price * item.qty).toLocaleString()}
                 </span>
                 <button
                   onClick={() => removeItem(item.product_id)}
@@ -815,7 +815,7 @@ function SellerInterface() {
                   className="text-xs font-semibold"
                   style={{ color: "#94a3b8" }}
                 >
-                  $
+                  ₱
                   {total?.toLocaleString(undefined, {
                     minimumFractionDigits: 2,
                   })}
@@ -834,7 +834,7 @@ function SellerInterface() {
                   className="text-lg font-bold"
                   style={{ color: "#10b981" }}
                 >
-                  $
+                  ₱
                   {total?.toLocaleString(undefined, {
                     minimumFractionDigits: 2,
                   })}
@@ -946,7 +946,7 @@ function SellerInterface() {
                 >
                   {change === null
                     ? "—"
-                    : `$${change.toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
+                    : `₱${change.toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
                 </span>
               </div>
             </div>
