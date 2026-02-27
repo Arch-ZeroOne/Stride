@@ -86,9 +86,6 @@ function SellerInterface() {
       cartRef.current = cart;
     }
   }, [cart]);
-  useEffect(() => {
-    console.log(products);
-  }, [products]);
 
   const getProducts = async () => {
     setProductsLoading(true);
@@ -313,7 +310,8 @@ function SellerInterface() {
     const matchesCategory =
       activeCategory === "All Categories" ||
       matchedCategoryId === p.product_category_id;
-    const matchesAvailable = Number(p.status_id) === 1;
+    const matchesAvailable =
+      Number(p.status_id) === 1 || Number(p.status_id === 4);
     return matchesSearch && matchesCategory && matchesAvailable;
   });
 
