@@ -11,6 +11,8 @@ const db = new pg.Client({
   password: process.env.PG_PASSWORD,
   port: parseInt(process.env.PG_PORT as string, 10),
 });
+
+db.connect();
 db.on("error", (err) => {
   console.error("Unexpected error on idle client", err);
   process.exit(-1);
