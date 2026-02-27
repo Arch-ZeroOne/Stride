@@ -1,15 +1,17 @@
 import pg, { QueryResultRow } from "pg";
-import * as dotenv from "dotenv";
+import env from "dotenv";
 import { QueryResult } from "pg";
 
-dotenv.config();
+env.config();
 
 const db = new pg.Client({
-  connectionString: process.env.DATABASE_URL,
-  ssl: {
-    rejectUnauthorized: false,
-  },
+  user: process.env.PG_USER,
+  host: process.env.PG_HOST,
+  database: process.env.PG_DATABASE,
+  password: process.env.PG_PASSWORD,
+  port: parseInt(process.env.PG_PORT as string, 10),
 });
+
 db.connect();
 db.on("error", (err) => {
   console.error("Unexpected error on idle client", err);
@@ -18,9 +20,9 @@ db.on("error", (err) => {
 
 //helper function for query
 
-export const query = <T extends QueryResultRow = any>(
+export const query = <T = any>(
   text: string,
   params?: any[],
-): Promise<QueryResult<T>> => {
-  return db.query<T>(text, params);
+): Promise<QueryResult<QueryResultRow>> => {
+  return db.query(text, params);
 };

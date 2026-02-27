@@ -75,7 +75,7 @@ export interface DashboardData {
 
 function sumField<T>(data: T[] | undefined, field: keyof T): number {
   if (!data || data.length === 0) return 0;
-  console.log(data);
+
   return data.reduce((acc, item) => acc + Number(item[field]), 0);
 }
 
@@ -132,7 +132,11 @@ function sharedOptions(yLabel = "Revenue"): ChartOptions<"line"> {
         callbacks: {
           label: (ctx) => {
             const y = ctx.parsed.y ?? 0; // fallback to 0 if null
-            return ` ${ctx.dataset.label}: ₱${fmtFull(y)}`;
+
+            if (ctx.dataset.label === "Income") {
+              return `${ctx.dataset.label}: ₱${fmtFull(y)}`;
+            }
+            return `${ctx.dataset.label}: ${fmtFull(y)}`;
           },
         },
       },
@@ -291,7 +295,7 @@ const Dashboard: React.FC = () => {
     const month = split[0];
 
     if (curr.label !== month) {
-      return Number(curr.sales) + acc;
+      Number(curr.sales) + acc;
     }
 
     return acc;

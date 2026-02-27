@@ -20,6 +20,7 @@ export const addSale = async (req: Request, res: Response) => {
 export const getSales = async (req: Request, res: Response) => {
   try {
     const sales = await saleService.getSales();
+    console.log("Controller Hit on get Sales");
 
     return res.status(200).json({ sales });
   } catch (error) {
