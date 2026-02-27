@@ -441,6 +441,7 @@ function SellerInterface() {
             >
               <Scan size={14} style={{ color: "#6366f1" }} />
               <input
+                value={String(barcodeValue)}
                 onChange={(e) => setBarcodeValue(e.target.value)}
                 onKeyDown={(e) => handleBarcodeScan(e)}
                 type="text"
