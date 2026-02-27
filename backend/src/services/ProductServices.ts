@@ -14,11 +14,10 @@ const checkAndUpdateStockStatus = async (id: string | number) => {
   console.log("Checking updatable status");
   const { quantity, status_id } = rows[0];
 
-  // If out of stock and currently active → mark as out of stock (status_id = 3)
-
   if (quantity <= 10) {
     await query("UPDATE product SET status_id = 4 WHERE product_id = $1", [id]);
   }
+  // If out of stock and currently active → mark as out of stock (status_id = 3)
   if (quantity <= 0 && status_id === 1) {
     await query("UPDATE product SET status_id = 3 WHERE product_id = $1", [id]);
   }

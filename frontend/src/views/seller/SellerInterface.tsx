@@ -293,6 +293,7 @@ function SellerInterface() {
       if (data.length !== 0) {
         addToCart(data[0], data[0].product_id);
       }
+      setBarcodeValue("");
     }
   };
 
