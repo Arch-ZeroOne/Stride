@@ -88,7 +88,7 @@ export const getSales = async () => {
     "SELECT TO_CHAR(selling_date,'Month') AS label,SUM(selling_item.quantity) AS sales,SUM(total) AS income FROM selling_item JOIN sales ON sales.sale_id = selling_item.sale_id  GROUP BY label ORDER BY label",
   );
   const weekly = await query(
-    "SELECT DATE_TRUNC('week',selling_date) AS weekly, TO_CHAR(selling_date,'Week') AS label, SUM(selling_item.quantity) AS total_sales, SUM(total) AS income FROM selling_item JOIN sales ON sales.sale_id = selling_item.sale_id  GROUP BY weekly,label,selling_date ORDER BY weekly, EXTRACT (DOW FROM selling_date)",
+    `SELECT DATE_TRUNC('week',selling_date) AS weekly, TO_CHAR(selling_date,'"Week "IW, YYYY') AS label, SUM(selling_item.quantity) AS total_sales, SUM(total) AS income FROM selling_item JOIN sales ON sales.sale_id = selling_item.sale_id  GROUP BY weekly,label,selling_date ORDER BY weekly, EXTRACT (DOW FROM selling_date)`,
   );
 
   const daily = await query(
