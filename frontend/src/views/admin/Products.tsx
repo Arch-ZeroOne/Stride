@@ -12,10 +12,11 @@ import Swal from "sweetalert2";
 import type { Status } from "../../types/status";
 import client from "../../axiosClient";
 import { useNavigate } from "react-router";
-import { Plus, Package, BarcodeIcon } from "lucide-react";
+import { Plus, Package, BarcodeIcon, X } from "lucide-react";
 import Barcode from "react-barcode";
 import { useBarcode } from "../../context/BarcodeContext";
 import { useReactToPrint } from "react-to-print";
+
 ModuleRegistry.registerModules([AllCommunityModule]);
 
 interface IRow {
@@ -56,6 +57,7 @@ function Products() {
     const fetchData = async () => {
       try {
         const response = await client.get("/products");
+
         setRowData(response.data);
       } catch (error) {
         console.error("Error fetching products:", error);
@@ -104,6 +106,8 @@ function Products() {
       confirmButtonColor: "#10b981",
       cancelButtonColor: "#ef4444",
       confirmButtonText: "Activate Product",
+      background: "#111827",
+      color: "#e2e8f0",
     }).then(async (result) => {
       if (result.isConfirmed) {
         try {
@@ -115,6 +119,9 @@ function Products() {
           title: "Product Activated!",
           text: "Product status set to available.",
           icon: "success",
+          background: "#111827",
+          color: "#e2e8f0",
+          confirmButtonColor: "#10b981",
         });
       }
     });
@@ -183,6 +190,7 @@ function Products() {
     }),
     [],
   );
+
   const gridOptions = {
     rowHeight: 60,
   };
@@ -198,7 +206,8 @@ function Products() {
       }}
     >
       {barcode ? <BarcodeModal barcode={barcode} /> : ""}
-      {/* Header */}
+
+      {/* ── Header ── */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
           <div
@@ -238,7 +247,7 @@ function Products() {
         </button>
       </div>
 
-      {/* Grid */}
+      {/* ── AG Grid ── */}
       <div
         className="rounded-2xl overflow-hidden"
         style={{ border: "1px solid rgba(255,255,255,0.06)" }}
@@ -274,6 +283,7 @@ function Products() {
   );
 }
 
+// ─── Status Cell ──────────────────────────────────────────────────────────────
 const StatusCellRenderer: React.FC<StatusChangeProps> = ({ row }) => {
   const status_id = row.status_id as Status;
   const [status, setStatus] = useState(status_id);
@@ -365,7 +375,6 @@ const StatusCellRenderer: React.FC<StatusChangeProps> = ({ row }) => {
         <option value={2} style={{ background: "#1a2035", color: "#e2e8f0" }}>
           Inactive
         </option>
-
         <option value={3} style={{ background: "#1a2035", color: "#e2e8f0" }}>
           Out of Stock
         </option>
@@ -383,7 +392,7 @@ const StatusCellRenderer: React.FC<StatusChangeProps> = ({ row }) => {
   );
 };
 
-// Eye icon removed — only Edit and Barcode actions remain
+// ─── Action Cell ──────────────────────────────────────────────────────────────
 const ActionCell: React.FC<ActionCellProps> = ({ data }) => {
   if (!data) return null;
 
@@ -393,13 +402,18 @@ const ActionCell: React.FC<ActionCellProps> = ({ data }) => {
 
   return (
     <div className="flex items-center gap-2 h-full">
+      {/* Edit */}
       <button
         onClick={() => {
           setProductAction("Update");
           navigate(`manageproduct/${data.product_id}`);
         }}
         className="flex items-center justify-center w-7 h-7 rounded-lg transition-all"
-        style={{ background: "rgba(251,191,36,0.1)", color: "#fbbf24" }}
+        style={{
+          background: "rgba(251,191,36,0.1)",
+          color: "#fbbf24",
+          border: "1px solid rgba(251,191,36,0.2)",
+        }}
         onMouseEnter={(e) =>
           ((e.currentTarget as HTMLElement).style.background =
             "rgba(251,191,36,0.22)")
@@ -412,24 +426,29 @@ const ActionCell: React.FC<ActionCellProps> = ({ data }) => {
       >
         <EditIcon className="w-3.5 h-3.5" />
       </button>
+
+      {/* Barcode */}
       <button
         onClick={() => {
           const barcodeModal = document.getElementById(
             "my_modal_1",
           ) as HTMLDialogElement;
-
           setBarcode(data.barcode);
           barcodeModal.showModal();
         }}
         className="flex items-center justify-center w-7 h-7 rounded-lg transition-all"
-        style={{ background: "rgba(251,191,36,0.1)", color: "#fbbf24" }}
+        style={{
+          background: "rgba(99,102,241,0.1)",
+          color: "#818cf8",
+          border: "1px solid rgba(99,102,241,0.2)",
+        }}
         onMouseEnter={(e) =>
           ((e.currentTarget as HTMLElement).style.background =
-            "rgba(251,191,36,0.22)")
+            "rgba(99,102,241,0.22)")
         }
         onMouseLeave={(e) =>
           ((e.currentTarget as HTMLElement).style.background =
-            "rgba(251,191,36,0.1)")
+            "rgba(99,102,241,0.1)")
         }
         title="View Barcode"
       >
@@ -439,40 +458,81 @@ const ActionCell: React.FC<ActionCellProps> = ({ data }) => {
   );
 };
 
+// ─── Barcode Renderer (inline in grid) ───────────────────────────────────────
 const BarcodeRenderer = ({ data }: any) => {
   const barcode = data.barcode;
   return <Barcode value={barcode} width={0.9} height={30} fontSize={10} />;
 };
 
+// ─── Barcode Modal ────────────────────────────────────────────────────────────
 const BarcodeModal = ({ barcode }: any) => {
   const componentRef = useRef<HTMLDivElement>(null);
+  const printBarcode = useReactToPrint({ contentRef: componentRef });
 
-  const printBarcode = useReactToPrint({
-    contentRef: componentRef,
-  });
   return (
-    <>
-      {/* Open the modal using document.getElementById('ID').showModal() method */}
-
-      <dialog id="my_modal_1" className="modal text-black">
-        <div className="modal-box">
-          <div className="flex justify-center" ref={componentRef}>
-            <Barcode value={barcode} displayValue={true} format="CODE128" />
-          </div>
-
-          <div className="modal-action">
-            <button className="btn btn-primary" onClick={printBarcode}>
-              Print Barcode
+    <dialog id="my_modal_1" className="modal text-black">
+      <div
+        className="modal-box"
+        style={{
+          background: "#111827",
+          border: "1px solid rgba(255,255,255,0.08)",
+          borderRadius: "20px",
+          padding: "28px",
+        }}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between mb-5">
+          <p className="font-bold text-white text-sm">Product Barcode</p>
+          <form method="dialog">
+            <button
+              className="w-7 h-7 flex items-center justify-center rounded-lg"
+              style={{
+                background: "rgba(255,255,255,0.05)",
+                color: "#64748b",
+                border: "1px solid rgba(255,255,255,0.07)",
+              }}
+            >
+              <X size={13} />
             </button>
-            <form method="dialog">
-              {/* if there is a button in form, it will close the modal */}
-
-              <button className="btn btn-error text-white">Close</button>
-            </form>
-          </div>
+          </form>
         </div>
-      </dialog>
-    </>
+
+        {/* Barcode */}
+        <div
+          className="flex justify-center rounded-xl p-4 mb-5"
+          style={{ background: "#fff" }}
+          ref={componentRef}
+        >
+          <Barcode value={barcode} displayValue={true} format="CODE128" />
+        </div>
+
+        {/* Actions */}
+        <div className="flex gap-2">
+          <button
+            className="flex-1 py-2.5 rounded-xl text-xs font-bold text-white"
+            style={{
+              background: "linear-gradient(135deg, #10b981, #059669)",
+              boxShadow: "0 4px 14px rgba(16,185,129,0.3)",
+            }}
+            onClick={() => printBarcode()}
+          >
+            Print Barcode
+          </button>
+          <form method="dialog" style={{ flex: 1 }}>
+            <button
+              className="w-full py-2.5 rounded-xl text-xs font-semibold"
+              style={{
+                background: "rgba(239,68,68,0.1)",
+                color: "#ef4444",
+                border: "1px solid rgba(239,68,68,0.2)",
+              }}
+            >
+              Close
+            </button>
+          </form>
+        </div>
+      </div>
+    </dialog>
   );
 };
 

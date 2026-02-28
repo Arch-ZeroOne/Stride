@@ -1,24 +1,27 @@
 import React, { useState } from "react";
-import { NavLink, Outlet, useLocation } from "react-router";
+import { NavLink, Outlet, useLocation, useNavigate } from "react-router";
 import {
   Package,
   ChevronLeft,
-  Bell,
-  Search,
   Settings,
   ShoppingBag,
   LayoutDashboard,
+  User,
+  LogOut,
 } from "lucide-react";
+import Swal from "sweetalert2";
 
 // ─── Nav config ────────────────────────────────────────────────────────────────
 const navItems = [
   { label: "Dashboard", icon: LayoutDashboard, to: "/admin/dashboard" },
+  { label: "Sellers", icon: User, to: "/admin/sellers" },
   { label: "Products", icon: Package, to: "/admin/productlist" },
 ];
 
 const routeMeta: Record<string, { label: string; icon: any }> = {
   dashboard: { label: "Dashboard", icon: LayoutDashboard },
   productlist: { label: "Products", icon: Package },
+  sellers: { label: "Manage Seller Profiles", icon: User },
   manageproduct: { label: "Manage Product", icon: Package },
   settings: { label: "Settings", icon: Settings },
 };
@@ -73,6 +76,28 @@ function Breadcrumb() {
 // ─── Layout ───────────────────────────────────────────────────────────────────
 function AppSidebar() {
   const [collapsed, setCollapsed] = useState(false);
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    Swal.fire({
+      title: "Log Out?",
+      text: "You will be returned to the sign in page.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Yes, log out",
+      cancelButtonText: "Cancel",
+      confirmButtonColor: "#ef4444",
+      cancelButtonColor: "#1e293b",
+      background: "#111827",
+      color: "#e2e8f0",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        // Clear any stored auth tokens here if needed
+        // localStorage.removeItem("token");
+        navigate("/signin");
+      }
+    });
+  };
 
   return (
     <div
@@ -158,7 +183,6 @@ function AppSidebar() {
             >
               {({ isActive }) => (
                 <>
-                  {/* Active bar */}
                   {isActive && (
                     <span
                       className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-[55%] rounded-r-full"
@@ -168,14 +192,12 @@ function AppSidebar() {
                       }}
                     />
                   )}
-
                   <Icon
                     size={16}
                     strokeWidth={isActive ? 2.2 : 1.8}
                     className="flex-shrink-0 transition-colors duration-150"
                     style={{ color: isActive ? "#10b981" : "#475569" }}
                   />
-
                   <span
                     className={`whitespace-nowrap transition-all duration-200 ${
                       collapsed
@@ -185,8 +207,6 @@ function AppSidebar() {
                   >
                     {label}
                   </span>
-
-                  {/* Collapsed active dot */}
                   {isActive && collapsed && (
                     <span
                       className="absolute right-2.5 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full"
@@ -202,11 +222,12 @@ function AppSidebar() {
           ))}
         </nav>
 
-        {/* ── Bottom: Settings + Collapse ── */}
+        {/* ── Bottom: Settings + Collapse + Logout ── */}
         <div
           className="px-2 pb-4 pt-3 flex flex-col gap-1 flex-shrink-0"
           style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}
         >
+          {/* Settings */}
           <NavLink
             to="/settings"
             className="group relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-all duration-150 no-underline"
@@ -251,6 +272,7 @@ function AppSidebar() {
             )}
           </NavLink>
 
+          {/* Collapse toggle */}
           <button
             onClick={() => setCollapsed(!collapsed)}
             className="flex items-center gap-3 px-3 py-2.5 rounded-xl w-full text-left text-[13px] font-medium transition-all duration-150"
@@ -280,6 +302,41 @@ function AppSidebar() {
               Collapse
             </span>
           </button>
+
+          {/* Logout */}
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-3 px-3 py-2.5 rounded-xl w-full text-left text-[13px] font-medium transition-all duration-150"
+            style={{
+              color: "#ef4444",
+              border: "1px solid transparent",
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLElement).style.background =
+                "rgba(239,68,68,0.08)";
+              (e.currentTarget as HTMLElement).style.border =
+                "1px solid rgba(239,68,68,0.15)";
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLElement).style.background = "transparent";
+              (e.currentTarget as HTMLElement).style.border =
+                "1px solid transparent";
+            }}
+          >
+            <LogOut
+              size={16}
+              strokeWidth={1.8}
+              className="flex-shrink-0"
+              style={{ color: "#ef4444" }}
+            />
+            <span
+              className={`whitespace-nowrap transition-all duration-200 ${
+                collapsed ? "opacity-0 w-0 overflow-hidden" : "opacity-100"
+              }`}
+            >
+              Log Out
+            </span>
+          </button>
         </div>
       </aside>
 
@@ -295,96 +352,29 @@ function AppSidebar() {
         >
           <Breadcrumb />
 
-          <div className="flex items-center gap-2">
-            {/* Search pill */}
+          {/* Avatar only */}
+          <button className="flex items-center gap-2.5 group">
             <div
-              className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-xl text-xs cursor-text transition-all"
+              className="w-8 h-8 rounded-xl flex items-center justify-center text-white text-xs font-bold"
               style={{
-                background: "#1a2035",
-                border: "1px solid rgba(255,255,255,0.07)",
-                color: "#334155",
+                background: "linear-gradient(135deg, #10b981, #059669)",
+                boxShadow: "0 2px 8px rgba(16,185,129,0.3)",
               }}
-              onMouseEnter={(e) =>
-                ((e.currentTarget as HTMLElement).style.borderColor =
-                  "rgba(255,255,255,0.12)")
-              }
-              onMouseLeave={(e) =>
-                ((e.currentTarget as HTMLElement).style.borderColor =
-                  "rgba(255,255,255,0.07)")
-              }
             >
-              <Search size={12} />
-              <span>Search…</span>
-              <kbd
-                className="ml-1 text-[10px] rounded px-1.5 py-0.5 font-mono"
-                style={{
-                  background: "rgba(255,255,255,0.05)",
-                  border: "1px solid rgba(255,255,255,0.08)",
-                  color: "#334155",
-                }}
-              >
-                ⌘K
-              </kbd>
+              RX
             </div>
-
-            {/* Bell */}
-            <button
-              className="relative w-8 h-8 rounded-xl flex items-center justify-center transition-all"
-              style={{
-                background: "#1a2035",
-                border: "1px solid rgba(255,255,255,0.07)",
-                color: "#475569",
-              }}
-              onMouseEnter={(e) => {
-                (e.currentTarget as HTMLElement).style.borderColor =
-                  "rgba(16,185,129,0.3)";
-                (e.currentTarget as HTMLElement).style.color = "#10b981";
-              }}
-              onMouseLeave={(e) => {
-                (e.currentTarget as HTMLElement).style.borderColor =
-                  "rgba(255,255,255,0.07)";
-                (e.currentTarget as HTMLElement).style.color = "#475569";
-              }}
-            >
-              <Bell size={14} strokeWidth={1.8} />
+            <div className="hidden md:flex flex-col leading-tight text-left">
               <span
-                className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full"
-                style={{
-                  background: "#10b981",
-                  boxShadow: "0 0 6px rgba(16,185,129,0.8)",
-                }}
-              />
-            </button>
-
-            <div
-              className="w-px h-5"
-              style={{ background: "rgba(255,255,255,0.06)" }}
-            />
-
-            {/* Avatar */}
-            <button className="flex items-center gap-2.5 group">
-              <div
-                className="w-8 h-8 rounded-xl flex items-center justify-center text-white text-xs font-bold"
-                style={{
-                  background: "linear-gradient(135deg, #10b981, #059669)",
-                  boxShadow: "0 2px 8px rgba(16,185,129,0.3)",
-                }}
+                className="text-xs font-semibold"
+                style={{ color: "#e2e8f0" }}
               >
-                JD
-              </div>
-              <div className="hidden md:flex flex-col leading-tight text-left">
-                <span
-                  className="text-xs font-semibold"
-                  style={{ color: "#e2e8f0" }}
-                >
-                  Jane Doe
-                </span>
-                <span className="text-[10px]" style={{ color: "#475569" }}>
-                  Admin
-                </span>
-              </div>
-            </button>
-          </div>
+                Rex Admin
+              </span>
+              <span className="text-[10px]" style={{ color: "#475569" }}>
+                Business Owner
+              </span>
+            </div>
+          </button>
         </header>
 
         {/* ── Outlet ── */}
