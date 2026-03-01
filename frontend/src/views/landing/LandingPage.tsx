@@ -260,6 +260,7 @@ function LandingPage() {
             <ArrowRight size={16} />
           </button>
           <button
+            onClick={() => navigate("/tutorial")}
             className="btn btn-lg btn-ghost"
             style={{
               color: "#64748b",
@@ -270,7 +271,7 @@ function LandingPage() {
               fontSize: "15px",
             }}
           >
-            See Demo
+            See Guide
           </button>
         </div>
 
@@ -436,7 +437,7 @@ function LandingPage() {
               actually uses every single day.
             </p>
             <button
-              onClick={() => navigate("/admin/login")}
+              onClick={() => navigate("/signin")}
               className="btn"
               style={{
                 background: "linear-gradient(135deg, #10b981, #059669)",

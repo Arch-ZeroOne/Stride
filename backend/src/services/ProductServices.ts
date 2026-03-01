@@ -11,7 +11,7 @@ const checkAndUpdateStockStatus = async (id: string | number) => {
   );
 
   if (!rows[0]) return;
-  console.log("Checking updatable status");
+
   const { quantity, status_id } = rows[0];
 
   if (quantity <= 10) {

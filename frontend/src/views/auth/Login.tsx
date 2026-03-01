@@ -8,6 +8,7 @@ function Login() {
   const [firstname, setFirstname] = useState<string>("");
   const [lastname, setLastname] = useState<string>("");
   const [loading, setLoading] = useState(false);
+
   const navigate = useNavigate();
 
   const handleLogin = () => {
@@ -42,8 +43,30 @@ function Login() {
           confirmButtonText: "Go to Dashboard",
           background: "#111827",
           color: "#e2e8f0",
-        }).then((result) => {
-          if (result.isConfirmed) navigate("/admin");
+        }).then(() => {
+          let timerInterval: number;
+          Swal.fire({
+            title: "You are being redirected please wait!",
+            html: "I will close in <b></b> milliseconds.",
+            timer: 2000,
+            timerProgressBar: true,
+            didOpen: () => {
+              Swal.showLoading();
+              const timer = Swal.getPopup()?.querySelector("b");
+              timerInterval = setInterval(() => {
+                if (!timer) return;
+                timer.textContent = `${Swal.getTimerLeft()}`;
+              }, 100);
+            },
+            willClose: () => {
+              clearInterval(timerInterval);
+            },
+          }).then((result) => {
+            if (result.dismiss === Swal.DismissReason.timer) {
+              navigate("/admin");
+            }
+          });
+          localStorage.setItem("Logged", JSON.stringify("Logged"));
         });
         return;
       }
@@ -68,6 +91,8 @@ function Login() {
             });
             const { logged, message } = response.data;
 
+            console.log(response);
+
             if (logged) {
               let timerInterval: number;
               Swal.fire({
@@ -88,9 +113,10 @@ function Login() {
                 },
               }).then((result) => {
                 if (result.dismiss === Swal.DismissReason.timer) {
-                  navigate("/pos");
+                  navigate("/seller");
                 }
               });
+              localStorage.setItem("Logged", JSON.stringify("Logged"));
             } else {
               Swal.fire({
                 title: "Error Logging In",

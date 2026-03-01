@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import type { ICellRendererParams } from "ag-grid-community";
+import type { ColDef, ICellRendererParams } from "ag-grid-community";
 import { AllCommunityModule, ModuleRegistry } from "ag-grid-community";
 import { AgGridReact } from "ag-grid-react";
 import client from "../../axiosClient";
@@ -274,8 +274,10 @@ function SellersTable() {
   };
 
   // ── Column Defs ────────────────────────────────────────────────────────
-  const colDefs = useMemo(
-    () => [
+  const [colDefs, setColDefs] = useState<ColDef[]>();
+
+  useEffect(() => {
+    setColDefs(() => [
       {
         field: "seller_id",
         headerName: "ID",
@@ -331,9 +333,8 @@ function SellersTable() {
           onDelete: handleDelete,
         },
       },
-    ],
-    [openModal],
-  );
+    ]);
+  }, []);
 
   const defaultColDef = useMemo(() => ({ flex: 2, editable: false }), []);
 

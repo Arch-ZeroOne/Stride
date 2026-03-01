@@ -61,7 +61,26 @@ function SellerInterface() {
   const [productsLoading, setProductsLoading] = useState(true);
   const [barcodeValue, setBarcodeValue] = useState("");
   const [cartOpen, setCartOpen] = useState(false);
+
   const cartRef = useRef<CartItem[] | undefined>(undefined);
+
+  const [logged, setLogged] = useState(() => {
+    // Check if localStorage is available (important for server-side rendering)
+    if (typeof window !== "undefined") {
+      const savedName = localStorage.getItem("Logged");
+      // Parse the stored string back into a JavaScript value, or use a default
+      return savedName ? JSON.parse(savedName) : "";
+    }
+    return ""; // Default value for server-side
+  });
+
+  useEffect(() => {
+    if (logged !== "Logged") {
+      navigate("/signin");
+      setLogged("Not Logged");
+      return;
+    }
+  }, []);
 
   useEffect(() => {
     if (cart) {
@@ -277,9 +296,7 @@ function SellerInterface() {
     }
   };
 
-  if (!products) return null;
-
-  const filteredProducts = products.filter((p) => {
+  const filteredProducts = products?.filter((p) => {
     const matchesSearch = p.product_name
       .toLowerCase()
       .includes(search.toLowerCase());
@@ -333,7 +350,7 @@ function SellerInterface() {
             style={{ background: "rgba(16,185,129,0.1)", color: "#10b981" }}
           >
             <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            {products.length} items
+            {products?.length} items
           </span>
 
           {/* Mobile cart toggle */}
@@ -501,7 +518,7 @@ function SellerInterface() {
               >
                 Loading products...
               </div>
-            ) : filteredProducts.length === 0 ? (
+            ) : filteredProducts?.length === 0 ? (
               <div
                 className="flex items-center justify-center h-48 text-sm"
                 style={{ color: "#64748b" }}
@@ -510,7 +527,7 @@ function SellerInterface() {
               </div>
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-3">
-                {filteredProducts.map((product) => (
+                {filteredProducts?.map((product) => (
                   <div
                     key={product.product_id}
                     onClick={() => addToCart(product, product.product_id)}

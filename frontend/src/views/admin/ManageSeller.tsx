@@ -30,7 +30,7 @@ function ManageSeller() {
     // Fetch branches for the dropdown
     const fetchBranches = async () => {
       const res = await client.get("/sellers/branches/index");
-
+      console.log(statuses);
       setBranches(res.data);
     };
 

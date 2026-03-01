@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router";
 import {
   Package,
@@ -77,6 +77,23 @@ function Breadcrumb() {
 function AppSidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const navigate = useNavigate();
+  const [logged, setLogged] = useState(() => {
+    // Check if localStorage is available (important for server-side rendering)
+    if (typeof window !== "undefined") {
+      const savedName = localStorage.getItem("Logged");
+      // Parse the stored string back into a JavaScript value, or use a default
+      return savedName ? JSON.parse(savedName) : "";
+    }
+    return ""; // Default value for server-side
+  });
+
+  useEffect(() => {
+    if (logged !== "Logged") {
+      setLogged("Not Logged");
+      navigate("/signin");
+      return;
+    }
+  }, []);
 
   const handleLogout = () => {
     Swal.fire({
@@ -94,6 +111,7 @@ function AppSidebar() {
       if (result.isConfirmed) {
         // Clear any stored auth tokens here if needed
         // localStorage.removeItem("token");
+        localStorage.setItem("Logged", JSON.stringify("Not Logged"));
         navigate("/signin");
       }
     });
