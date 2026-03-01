@@ -7,6 +7,8 @@ import ManageProduct from "./views/admin/ManageProduct";
 import Dashboard from "./views/admin/Dashboard";
 import SellerInterface from "./views/seller/SellerInterface";
 import LandingPage from "./views/landing/LandingPage";
+import SellersTable from "./views/admin/SellersTable";
+import TutorialPage from "./views/landing/TutorialPage";
 const router = createBrowserRouter([
   {
     path: "/signin",
@@ -41,11 +43,19 @@ const router = createBrowserRouter([
         path: "manageproduct",
         element: <ManageProduct />,
       },
+      {
+        path: "sellers",
+        element: <SellersTable />,
+      },
     ],
   },
   {
     path: "/seller",
     element: <SellerInterface />,
+  },
+  {
+    path: "/tutorial",
+    element: <TutorialPage />,
   },
 ]);
 
