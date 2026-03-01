@@ -247,7 +247,7 @@ function AppSidebar() {
         >
           {/* Settings */}
           <NavLink
-            to="/settings"
+            to="/manageprofile"
             className="group relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-all duration-150 no-underline"
             style={({ isActive }) =>
               isActive
