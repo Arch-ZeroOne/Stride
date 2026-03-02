@@ -22,7 +22,7 @@ const DashedLine = () => (
   <div style={{ margin: "10px 0", borderTop: "1.5px dashed #c8c8c8" }} />
 );
 
-function Receipt({ cart, amountPaid, change, onClose, setCart }: ReceiptProps) {
+function Receipt({ cart, amountPaid, change, onClose }: ReceiptProps) {
   const contentRef = useRef<HTMLDivElement>(null);
   const reactToPrintFn = useReactToPrint({ contentRef });
 
