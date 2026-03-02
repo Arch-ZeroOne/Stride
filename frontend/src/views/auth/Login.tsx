@@ -89,9 +89,11 @@ function Login() {
               firstname,
               lastname,
             });
-            const { logged, message } = response.data;
 
             console.log(response);
+            const { logged, message } = response.data;
+
+            console.log(message);
 
             if (logged) {
               let timerInterval: number;
@@ -115,8 +117,8 @@ function Login() {
                 if (result.dismiss === Swal.DismissReason.timer) {
                   navigate("/seller");
                 }
+                localStorage.setItem("Logged", JSON.stringify("Logged"));
               });
-              localStorage.setItem("Logged", JSON.stringify("Logged"));
             } else {
               Swal.fire({
                 title: "Error Logging In",
