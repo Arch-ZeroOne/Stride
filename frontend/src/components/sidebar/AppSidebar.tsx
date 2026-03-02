@@ -8,6 +8,7 @@ import {
   LayoutDashboard,
   User,
   LogOut,
+  Banknote,
 } from "lucide-react";
 import Swal from "sweetalert2";
 
@@ -16,6 +17,7 @@ const navItems = [
   { label: "Dashboard", icon: LayoutDashboard, to: "/admin/dashboard" },
   { label: "Sellers", icon: User, to: "/admin/sellers" },
   { label: "Products", icon: Package, to: "/admin/productlist" },
+  { label: "Expenses", icon: Banknote, to: "/admin/expenses" },
 ];
 
 const routeMeta: Record<string, { label: string; icon: any }> = {
@@ -247,7 +249,7 @@ function AppSidebar() {
         >
           {/* Settings */}
           <NavLink
-            to="/settings"
+            to="/admin/settings"
             className="group relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-all duration-150 no-underline"
             style={({ isActive }) =>
               isActive

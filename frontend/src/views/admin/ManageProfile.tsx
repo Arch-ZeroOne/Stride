@@ -10,7 +10,7 @@ interface AdminProfile {
   profile_image: string | null;
 }
 
-function Managerofile() {
+function Manageprofile() {
   const [profile, setProfile] = useState<AdminProfile | null>(null);
   const [username, setUsername] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -187,4 +187,4 @@ function Managerofile() {
   );
 }
 
-export default Managerofile;
+export default Manageprofile;

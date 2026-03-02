@@ -9,7 +9,8 @@ import SellerInterface from "./views/seller/SellerInterface";
 import LandingPage from "./views/landing/LandingPage";
 import SellersTable from "./views/admin/SellersTable";
 import TutorialPage from "./views/landing/TutorialPage";
-import Managerofile from "./views/admin/ManageProfile";
+import Manageprofile from "./views/admin/ManageProfile";
+import ExpensesTable from "./views/admin/ExpensesTable";
 const router = createBrowserRouter([
   {
     path: "/signin",
@@ -49,9 +50,11 @@ const router = createBrowserRouter([
         element: <SellersTable />,
       },
       {
-        path: "manageprofile",
-        element: <Managerofile />,
+        path: "expenses",
+        element: <ExpensesTable />,
       },
+
+      { path: "settings", element: <Manageprofile /> },
     ],
   },
   {
