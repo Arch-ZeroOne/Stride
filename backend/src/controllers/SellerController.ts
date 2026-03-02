@@ -166,7 +166,8 @@ export const getAllBranch = async (req: Request, res: Response) => {
 export const logIn = async (req: Request, res: Response) => {
   try {
     const sellerStatus = await sellerService.logIn(req.body);
-    if (sellerStatus[0].status_id === 1) {
+    console.log(sellerStatus);
+    if (sellerStatus[0].status_id === 1 || sellerStatus[0].status_id === 4) {
       return res.status(200).json({ logged: true });
     } else if (sellerStatus[0].status_id === 2) {
       return res.status(200).json({
@@ -178,10 +179,10 @@ export const logIn = async (req: Request, res: Response) => {
         logged: false,
         message: "Account Disabled Please Contact the Admin",
       });
-    } else if (sellerStatus[0].status_id === 4) {
+    } else if (sellerStatus[0].status_id === 5) {
       return res.status(200).json({
         logged: false,
-        message: "Account Still Waiting Approval Please Contact the Admin",
+        message: "Account Waiting Approval Please Contact the Admin",
       });
     }
   } catch (error) {
