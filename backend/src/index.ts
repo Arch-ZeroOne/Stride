@@ -5,6 +5,7 @@ import saleRoutes from "./routes/SalesRoutes";
 import expressListEndpoints from "express-list-endpoints";
 import sellerRoutes from "./routes/SellerRoutes";
 import adminRoutes from "./routes/AdminRoutes";
+import expenseRoutes from "./routes/ExpenseRoutes";
 const app: Application = express();
 const port = 3000;
 
@@ -15,6 +16,7 @@ app.use("/api", productRoutes);
 app.use("/api", saleRoutes);
 app.use("/api", sellerRoutes);
 app.use("/api", adminRoutes);
+app.use("/api", expenseRoutes);
 
 app.listen(port, () => {
   console.log("Index.ts");
