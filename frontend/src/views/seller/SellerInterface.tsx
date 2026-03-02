@@ -18,6 +18,7 @@ import type { SaleData, ItemData } from "../../types/sale";
 import client from "../../axiosClient";
 import Default from "/default/defaultimage.png";
 import Swal from "sweetalert2";
+import Receipt from "./Receipt";
 
 type Categories = {
   product_category_id: number;
@@ -61,6 +62,7 @@ function SellerInterface() {
   const [productsLoading, setProductsLoading] = useState(true);
   const [barcodeValue, setBarcodeValue] = useState("");
   const [cartOpen, setCartOpen] = useState(false);
+  const [showReceipt, setShowReceipt] = useState(false);
 
   const cartRef = useRef<CartItem[] | undefined>(undefined);
 
@@ -256,8 +258,9 @@ function SellerInterface() {
           icon: "success",
         });
         await getProducts();
+        setShowReceipt(true);
         setLoading(false);
-        setCart([]);
+
         setAmountPaid("");
         setChange(null);
         return;
@@ -296,6 +299,11 @@ function SellerInterface() {
     }
   };
 
+  const onClose = () => {
+    setShowReceipt(false);
+    setCart([]);
+  };
+
   const filteredProducts = products?.filter((p) => {
     const matchesSearch = p.product_name
       .toLowerCase()
@@ -321,6 +329,7 @@ function SellerInterface() {
         fontFamily: "system-ui, sans-serif",
       }}
     >
+      {showReceipt && <Receipt cart={cart} onClose={onClose} />}
       {/* ── Top Bar ── */}
       <div
         className="flex items-center justify-between px-3 sm:px-5 py-2.5 shrink-0 z-10"
